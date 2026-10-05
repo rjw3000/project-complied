@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    env_file: .env
+    command: ["python", "-m", "complied.web", "--host", "0.0.0.0", "--db", "/data/complied.sqlite3"]
+    expose: ["8080"]
+    volumes: [complied-data:/data]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+  worker:
+    profiles: ["live-reminders"]
+    build: .
+    env_file: .env
+    command: ["python", "-m", "complied.microsoft_worker", "--db", "/data/complied.sqlite3", "--interval", "60"]
+    volumes: [complied-data:/data]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+  proxy:
+    image: caddy:2
+    environment:
+      COMPLIED_DOMAIN: ${COMPLIED_DOMAIN}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [app]
+    restart: unless-stopped
+volumes:
+  complied-data:
+  caddy-data:
+  caddy-config:

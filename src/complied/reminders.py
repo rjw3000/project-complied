@@ -39,11 +39,19 @@ def configure(db,token,recipient,calendar_id):
     if not calendar_id.strip() or len(calendar_id)>1000:
         raise ValueError("Calendar ID required")
     version=hashlib.sha256(json.dumps([recipient,calendar_id]).encode()).hexdigest()
-    with db:
+    db.execute("BEGIN IMMEDIATE")
+    try:
+        user=authorize(db,token,"reminders")
+        if user["role"]!="owner":
+            raise PermissionError("Owner configures destinations")
         db.execute("INSERT OR REPLACE INTO reminder_settings VALUES(1,?,?,?)",
                    (recipient,calendar_id,version))
         audit(db,user,"configure-reminders","settings",{"version":version})
-    return version
+        db.commit()
+        return version
+    except Exception:
+        db.rollback()
+        raise
 
 def task(db,task_id):
     return db.execute("""SELECT t.*,o.title,o.jurisdiction,o.owner,o.status AS applicability,

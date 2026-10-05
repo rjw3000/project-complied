@@ -13,7 +13,7 @@ Current topology: [architecture](docs/specs/03-System-Architecture.md). The exis
 
 ## Current implementation
 
-Repository foundation, a dependency-free Python approval reference, and a local synthetic deadline dashboard. This is not a running tax application. Python is a provisional reference implementation, not a final technology selection. No live integrations, tax rules, filing, or payments are enabled.
+Repository foundation, a dependency-free Python approval reference, and a local synthetic deadline dashboard. This is not a running tax application. Python is a provisional reference implementation, not a final technology selection. Microsoft Graph code is opt-in and unprovisioned; no live tenant, tax rules, filing or payments are enabled.
 
 ```sh
 python3 -m unittest discover -s tests -v
@@ -32,7 +32,7 @@ Start with [Project.md](Project.md) and [Handoff.md](Handoff.md). Next build: M1
 
 ## Run the synthetic deadline prototype
 
-Requires Python 3.12 with timezone data. From the repository root:
+Requires Python 3.12 with timezone data. Install pinned runtime dependencies with `python3 -m pip install -r requirements.txt`. From the repository root:
 
 ```sh
 PYTHONPATH=src python3 -m complied.deadlines seed
@@ -47,7 +47,7 @@ python3 scripts/check_repository.py
 python3 -m unittest discover -s tests -v
 ```
 
-Local database is var/demo.sqlite3 (excluded from Git). Seed is repeatable. [ADR 001](docs/decisions/001-local-prototype.md) records the prototype-only stack decision. Local authenticated editing/review is implemented; production identity, notification delivery, PostalMate imports and filing/payment execution remain pending.
+Local database is var/demo.sqlite3 (excluded from Git). Seed is repeatable. [ADR 001](docs/decisions/001-local-prototype.md) records the prototype-only stack decision. Local authenticated editing/review is implemented; Microsoft identity and delivery require the documented tenant setup. Native PostalMate mapping and filing/payment execution remain pending.
 
 ## Generate synthetic recurring deadlines
 
@@ -100,3 +100,7 @@ Open **Sales preparation → Review source package** to record source review, re
 ## Guided owner workflow
 
 Sign in to see **Monthly sales** and the next action for the most recent package. Open **Sales preparation** to upload two normalized reports, inspect **Reconcile monthly sales** for per-store controls, entity totals, hashes and alternative versions, then **Review monthly source package** to record a source decision. Corrections create a new immutable package and make prior reviews of that month stale. The guided checks verify the normalized contract only; actual PostalMate mappings, tax treatment and return lines remain to be verified. The dashboard never marks a return filing-ready.
+
+## Microsoft sign-in and deployable host
+
+The local synthetic prototype keeps local accounts on loopback. A separate Microsoft mode supports allowlisted Entra owner/delegate sign-in, owner-only delegated Graph connection, calendar selection and an explicitly enabled reminder worker. A one-host Docker Compose and Caddy configuration, `.env.example`, backup script and setup/recovery steps are in [Deployment](docs/DEPLOYMENT.md). No tenant app, secret, domain or host has been provisioned in this repository; do not load actual records before controlled setup and restoration tests.

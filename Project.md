@@ -118,3 +118,7 @@ The internal prototype uses one consistent responsive shell with browser upload 
 ## Owner dashboard and monthly path (5 October 2026)
 
 The owner can begin at the dashboard and follow Upload → Reconcile → Review. The dashboard prioritizes deadline exceptions and the latest monthly package. Reconciliation exposes store controls, combined totals, selected source hashes, other imported versions, and pending legal/tax mapping; the review step records an auditable source decision. Changed sources stale earlier decisions. No screen marks a package return-ready or initiates filing/payment.
+
+## Microsoft and deployment code (5 October 2026)
+
+The next proposed mode is a single-tenant Entra Web sign-in restricted to the owner and explicitly approved delegate object IDs. An owner-only delegated Graph connection can select a dedicated calendar; token cache encryption and an explicit worker gate protect queued reminder dispatch. Docker Compose and Caddy form a single-host, local-disk deployment kit; actual tenant registration, DNS/host, secrets, MFA policy, recipient, calendar and backup restore are operational prerequisites. No live service or notification has been provisioned yet.

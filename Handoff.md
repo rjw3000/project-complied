@@ -58,3 +58,7 @@ A responsive common UI shell and authenticated two-store CSV upload flow are und
 ## Guided owner flow (5 October 2026)
 
 Owner overview now surfaces overdue/unverified obligations and the next monthly source action. Upload → reconcile → review is a linked browser path. Internal reconciliation verifies per-store control arithmetic, combined source totals, stored hashes and alternate versions, then shows the independent statutory/tax mapping work as pending. Review decisions remain append-only and source-only. This is still a synthetic normalized CSV pilot; obtain redacted native PostalMate samples before production mapping.
+
+## Microsoft and hosting handoff (5 October 2026)
+
+Code paths for allowlisted single-tenant Microsoft sign-in, owner-only Graph connection, encrypted token cache, calendar selection and an opt-in scheduled worker are proposed. The worker preflights the owner token and uses the durable one-at-a-time outbox; unknown outcomes remain manual reconciliation. A single-host Compose/Caddy deployment kit and SQLite backup tool are prepared. Outstanding external inputs: owner Entra tenant/client/oid and a configured Web redirect, consent and MFA, DNS/domain, private host and encrypted off-host backup destination; never put credentials in Git or chat. First production-data pilot remains blocked by real PostalMate mapping and restoration test.

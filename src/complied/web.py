@@ -1,9 +1,10 @@
 """Read-only loopback dashboard for synthetic development data."""
 import argparse
+import os
 from collections import Counter
 from datetime import datetime
 from html import escape
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 from complied.deadlines import connect, dashboard
@@ -62,11 +63,21 @@ def handler_for(db_path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--db",default="var/demo.sqlite3")
+    parser.add_argument("--db",default=os.environ.get("COMPLIED_DB","var/demo.sqlite3"))
     parser.add_argument("--port",type=int,default=8080)
+    parser.add_argument("--host",default="127.0.0.1",choices=["127.0.0.1","0.0.0.0"])
     args = parser.parse_args()
-    with HTTPServer(("127.0.0.1",args.port),handler_for(args.db)) as server:
-        print(f"Synthetic dashboard: http://127.0.0.1:{args.port}")
+    from complied.microsoft_identity import configured,settings
+    if args.host=="0.0.0.0" and not configured():
+        raise ValueError("Network bind requires Microsoft deployment mode")
+    if configured():
+        settings()
+    from pathlib import Path
+    Path(args.db).parent.mkdir(parents=True,exist_ok=True)
+    init=connect(args.db)
+    init.close()
+    with ThreadingHTTPServer((args.host,args.port),handler_for(args.db)) as server:
+        print("Project Complied listening on "+args.host+":"+str(args.port))
         server.serve_forever()
 
 if __name__ == "__main__":

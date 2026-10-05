@@ -134,3 +134,21 @@ class ReminderTests(unittest.TestCase):
         transport=Transport(("accepted",None))
         self.assertEqual(dispatch_one(self.db,transport,now=self.now),"unknown")
         self.assertEqual(transport.calls,0)
+
+    def test_destination_revoked_before_write_lock(self):
+        from unittest.mock import patch
+        from complied import reminders
+        from complied.access import disable_user
+        original=reminders.authorize
+        first=[]
+        def revoke(*args):
+            result=original(*args)
+            if not first:
+                first.append(True)
+                disable_user(self.db,"owner")
+            return result
+        with patch.object(reminders,"authorize",side_effect=revoke):
+            with self.assertRaises(PermissionError):
+                reminders.configure(self.db,self.token,"new@example.invalid","changed-calendar")
+        saved=self.db.execute("SELECT recipient,calendar_id FROM reminder_settings").fetchone()
+        self.assertEqual(tuple(saved),("demo@example.invalid","calendar-demo"))

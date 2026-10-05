@@ -1,5 +1,6 @@
 """Authenticated editing UI for the loopback prototype."""
 import hmac
+import os
 import sqlite3
 from html import escape
 from http.cookies import SimpleCookie
@@ -36,7 +37,7 @@ def page(title,content,public=False):
             'table{border-collapse:collapse;width:100%;text-align:left}th,td{padding:13px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#eaf0f5;font-size:13px;white-space:nowrap}tr:last-child td{border-bottom:0}'
             'label{display:block;margin:12px 0;color:#344c63;font-weight:600}input,select,textarea{display:block;width:min(100%,680px);font:inherit;padding:10px 12px;border:1px solid #aabccc;border-radius:7px;background:white;color:var(--ink)}'
             'input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid #54a9db;outline-offset:2px}'
-            'input[type=hidden]{display:none}textarea{min-height:95px}button{font:inherit;font-weight:650;background:var(--blue);color:white;padding:10px 17px;border:0;border-radius:7px;cursor:pointer}'
+            'input[type=hidden]{display:none}input[type=checkbox]{display:inline;width:auto;margin-right:9px}textarea{min-height:95px}button{font:inherit;font-weight:650;background:var(--blue);color:white;padding:10px 17px;border:0;border-radius:7px;cursor:pointer}'
             'button:hover{background:#0e395f}.button-link{display:inline-block;background:#174c7e;color:white;text-decoration:none;padding:10px 17px;border-radius:7px;font-weight:650}'
             '.steps{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0;margin:24px 0}.steps li{padding:12px;background:#e6edf2;border-radius:10px;color:#385269;font-weight:650}.steps .current{background:#174c7e;color:white}'
             '.action-card{background:#e7f5f1;border:1px solid #9dd0bf;border-radius:14px;padding:23px;margin:22px 0}.badge{font-size:12px;font-weight:700;display:inline-block;padding:3px 9px;border-radius:99px;background:#e6eef4;color:#174c7e;vertical-align:middle}'
@@ -77,14 +78,32 @@ def reminders_page(db,user):
     from complied.reminders import list_outbox,valid,task
     csrf=hidden("csrf",user["csrf"])
     content='<p><a href="/">Dashboard</a> · <a href="/register">Requirement review</a></p>'
-    content+='<p>Microsoft connection pending. Queue and preview only; nothing is sent.</p>'
+    from complied.microsoft_identity import configured,connected
+    live=configured()
+    linked=connected(db,user["id"]) if live and user["role"]=="owner" else False
+    if live:
+        content+='<p>Live delivery is '+("configured" if linked else "awaiting owner connection")+'. Queued work is sent only when the separate worker is enabled.</p>'
+        if user["role"]=="owner":
+            if linked:
+                content+='<p><a href="/microsoft-calendars">Browse Microsoft calendars</a></p>'
+                content+='<form method="post" action="/disconnect-microsoft">'+csrf+'<button>Disconnect Microsoft reminders</button></form>'
+            else:
+                content+='<form method="post" action="/connect-microsoft">'+csrf+'<button>Connect Microsoft reminders</button></form>'
+    else:
+        content+='<p>Microsoft connection pending. Queue and preview only; nothing is sent.</p>'
+    if live:
+        runtime=db.execute("SELECT status,updated FROM microsoft_runtime_status WHERE singleton=1").fetchone()
+        worker_status=("Last worker check: "+runtime["status"] if runtime else "Worker has not checked yet")
+        if os.environ.get("COMPLIED_LIVE_SEND")!="1":
+            worker_status="Live worker disabled until controlled setup is complete"
+        content+='<p class="notice">'+escape(worker_status)+'</p>'
     settings=db.execute("SELECT * FROM reminder_settings WHERE singleton=1").fetchone()
-    if user["role"]=="owner":
+    if user["role"]=="owner" and (not live or linked):
         content+='<form method="post" action="/configure-reminders"><h2>Destinations</h2>'+csrf
         content+=field("recipient","Reminder email",settings["recipient"] if settings else "",kind="email")
         content+=field("calendar_id","Dedicated calendar ID",settings["calendar_id"] if settings else "")
         content+='<button>Save destinations</button></form>'
-    if settings:
+    if settings and (not live or connected(db,"ms:"+os.environ.get("COMPLIED_OWNER_OID","").lower())):
         content+='<form method="post" action="/queue-reminder"><h2>Queue a reminder</h2>'+csrf
         content+='<label>Verified task<select name="task_id">'
         for row in db.execute("SELECT id FROM tasks ORDER BY id"):
@@ -93,7 +112,12 @@ def reminders_page(db,user):
                 content+='<option value="'+str(row["id"])+'">'+escape(record["title"]+' · '+record["period"])+'</option>'
         content+='</select></label><label>Channel<select name="channel"><option value="email">Email</option><option value="calendar">Calendar event</option></select></label>'
         content+=field("offset_days","Days before deadline (email)",7,kind="number")
-        content+='<button>Queue for preview</button></form>'
+        if live:
+            content+='<p class="notice">This queues a real Microsoft request. Calendar events may send immediately while the live worker runs; email is scheduled for the chosen date. If the worker is currently disabled, queued work becomes eligible when it is enabled.</p>'
+            content+='<label><input type="checkbox" name="confirm_live" value="yes" required> I confirm this reminder may be delivered to Microsoft 365</label>'
+            content+='<button>Queue for delivery</button></form>'
+        else:
+            content+='<button>Queue for preview</button></form>'
     content+='<h2>Reminder history</h2>'
     for row in list_outbox(db):
         content+='<form><strong>'+escape(row["channel"]+' · '+row["status"])+'</strong>'
@@ -102,6 +126,25 @@ def reminders_page(db,user):
             content+='<p>Task or destination changed: reconciliation needed.</p>'
         content+='<pre style="white-space:pre-wrap">'+escape(row["payload"])+'</pre></form>'
     return page("Microsoft reminders",content)
+
+
+def calendars_page(db,user,token):
+    from complied.microsoft_identity import graph_token
+    from complied.microsoft import GraphHTTPTransport
+    if user["role"]!="owner":
+        raise PermissionError("Owner calendar selection required")
+    graph=GraphHTTPTransport(graph_token(db,user["id"]),enabled=True)
+    calendars=graph.get_calendars()
+    settings=db.execute("SELECT recipient FROM reminder_settings WHERE singleton=1").fetchone()
+    content='<p>Choose a dedicated calendar for deadline events. The recipient receives reminder email.</p>'
+    content+='<form method="post" action="/configure-reminders">'+hidden("csrf",user["csrf"])
+    content+=field("recipient","Reminder email",settings["recipient"] if settings else "",kind="email")
+    content+='<label>Microsoft calendar<select name="calendar_id" required>'
+    for calendar in calendars:
+        content+='<option value="'+escape(calendar["id"],quote=True)+'">'+escape(calendar["name"])+'</option>'
+    content+='</select></label><button>Save calendar and recipient</button></form>'
+    content+='<a href="/reminders">Back to reminders</a>'
+    return page("Select Microsoft calendar",content)
 
 
 def schedules_page(db,user):
@@ -248,16 +291,28 @@ def package_query(path):
     return package_id
 
 def handler_for(db_path):
+    from complied.microsoft_identity import configured,settings as microsoft_settings
+    public_origin=microsoft_settings()["COMPLIED_PUBLIC_ORIGIN"] if configured() else None
     class Handler(BaseHTTPRequestHandler):
+        def log_message(self,format,*args):
+            # OAuth callbacks include short-lived codes in the URL; never log request paths.
+            pass
         def origin(self):
-            return "http://127.0.0.1:"+str(self.server.server_port)
+            return public_origin or "http://127.0.0.1:"+str(self.server.server_port)
         def allowed_host(self):
-            return self.headers.get("Host")=="127.0.0.1:"+str(self.server.server_port)
+            return self.headers.get("Host")==urlsplit(self.origin()).netloc
         def token(self):
             cookies=SimpleCookie()
             try:
                 cookies.load(self.headers.get("Cookie",""))
                 return cookies["complied_session"].value if "complied_session" in cookies else ""
+            except Exception:
+                return ""
+        def flow_cookie(self):
+            cookies=SimpleCookie()
+            try:
+                cookies.load(self.headers.get("Cookie",""))
+                return cookies["complied_flow"].value if "complied_flow" in cookies else ""
             except Exception:
                 return ""
         def respond(self,status,content,cookie=None,content_type="text/html; charset=utf-8",download=False):
@@ -269,7 +324,9 @@ def handler_for(db_path):
             self.send_header("Cache-Control","no-store")
             self.send_header("X-Content-Type-Options","nosniff")
             self.send_header("Content-Security-Policy","default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'")
-            if cookie: self.send_header("Set-Cookie",cookie)
+            if cookie:
+                for item in cookie if isinstance(cookie,(list,tuple)) else (cookie,):
+                    self.send_header("Set-Cookie",item)
             self.end_headers()
             self.wfile.write(payload)
         def redirect(self,target,cookie=None):
@@ -277,18 +334,58 @@ def handler_for(db_path):
             self.send_header("Location",target)
             self.send_header("Cache-Control","no-store")
             self.send_header("Content-Length","0")
-            if cookie: self.send_header("Set-Cookie",cookie)
+            if cookie:
+                for item in cookie if isinstance(cookie,(list,tuple)) else (cookie,):
+                    self.send_header("Set-Cookie",item)
             self.end_headers()
+        def setup(self):
+            super().setup()
+            self.connection.settimeout(15)
         def do_GET(self):
             if not self.allowed_host():
                 self.send_error(403)
                 return
             path=urlsplit(self.path).path
+            if path=="/auth/microsoft" and public_origin:
+                from complied.microsoft_identity import begin
+                db=connect(db_path)
+                try:
+                    url,browser=begin(db,"login")
+                    self.redirect(url,"complied_flow="+browser+"; Secure; HttpOnly; SameSite=Lax; Path=/auth; Max-Age=600")
+                except (ValueError,PermissionError):
+                    self.send_error(403)
+                finally:
+                    db.close()
+                return
+            if path=="/auth/callback" and public_origin:
+                from complied.microsoft_identity import finish
+                db=connect(db_path)
+                try:
+                    if len(self.path)>8192:
+                        raise ValueError("Callback too large")
+                    query=parse_qs(urlsplit(self.path).query,keep_blank_values=True,max_num_fields=4)
+                    if any(len(v)!=1 for v in query.values()) or not set(query)<=set(("code","state","session_state")):
+                        raise ValueError("Invalid callback")
+                    session,kind=finish(db,self.flow_cookie(),{k:v[0] for k,v in query.items()},self.token())
+                    clear="complied_flow=; Secure; HttpOnly; SameSite=Lax; Path=/auth; Max-Age=0"
+                    cookies=[clear]
+                    if kind=="login":
+                        cookies.append("complied_session="+session+"; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600")
+                    self.redirect("/" if kind=="login" else "/reminders",cookies)
+                except Exception:
+                    # A provider failure must not log its callback parameters or token details.
+                    self.send_error(403)
+                finally:
+                    db.close()
+                return
             if path=="/login":
+                if public_origin:
+                    self.redirect("/auth/microsoft")
+                    return
                 form='<form method="post" action="/login">'+field("user","User")+field("password","Password",kind="password")+'<button>Sign in</button></form>'
                 self.respond(200,page("Project Complied sign-in",form,public=True))
                 return
-            if path not in ("/","/register","/reminders","/schedules","/preparation","/package","/reconcile","/package-export"):
+            if path not in ("/","/register","/reminders","/microsoft-calendars","/schedules","/preparation","/package","/reconcile","/package-export"):
                 self.send_error(404)
                 return
             db=connect(db_path)
@@ -304,6 +401,8 @@ def handler_for(db_path):
                     content=reconcile_page(db,package_query(self.path))
                 elif path=="/package":
                     content=package_page(db,user,package_query(self.path))
+                elif path=="/microsoft-calendars" and public_origin:
+                    content=calendars_page(db,user,self.token())
                 elif path=="/preparation":
                     content=preparation_page(db,user)
                 elif path=="/schedules":
@@ -312,6 +411,8 @@ def handler_for(db_path):
                     content=reminders_page(db,user)
                 elif path=="/register":
                     content=register_page(db,user)
+                elif path=="/microsoft-calendars":
+                    raise ValueError("Microsoft not configured")
                 else:
                     from complied.web import render
                     today=datetime.now(ZoneInfo("America/New_York")).date()
@@ -329,7 +430,7 @@ def handler_for(db_path):
                 self.send_error(403)
                 return
             path=urlsplit(self.path).path
-            if path not in ("/login","/logout","/create","/edit","/review","/configure-reminders","/queue-reminder","/schedule-preview","/schedule-confirm","/package-review","/upload-sales"):
+            if path not in ("/login","/logout","/create","/edit","/review","/configure-reminders","/queue-reminder","/schedule-preview","/schedule-confirm","/package-review","/upload-sales","/connect-microsoft","/disconnect-microsoft"):
                 self.send_error(404)
                 return
             try:
@@ -355,6 +456,8 @@ def handler_for(db_path):
             db=connect(db_path)
             try:
                 if path=="/login":
+                    if public_origin:
+                        raise PermissionError("Use Microsoft sign-in")
                     token,_=login(db,fields["user"],fields["password"])
                     self.redirect("/",f"complied_session={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600")
                     return
@@ -364,7 +467,19 @@ def handler_for(db_path):
                     raise PermissionError("Invalid request token")
                 if path=="/logout":
                     logout(db,token)
-                    self.redirect("/login","complied_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0")
+                    self.redirect("/login","complied_session=; "+("Secure; " if public_origin else "")+"HttpOnly; SameSite=Lax; Path=/; Max-Age=0")
+                elif path=="/connect-microsoft":
+                    if not public_origin:
+                        raise PermissionError("Microsoft not configured")
+                    from complied.microsoft_identity import begin
+                    url,browser=begin(db,"connect",token)
+                    self.redirect(url,"complied_flow="+browser+"; Secure; HttpOnly; SameSite=Lax; Path=/auth; Max-Age=600")
+                elif path=="/disconnect-microsoft":
+                    if not public_origin:
+                        raise PermissionError("Microsoft not configured")
+                    from complied.microsoft_identity import disconnect
+                    disconnect(db,token)
+                    self.redirect("/reminders")
                 elif path=="/upload-sales":
                     from complied.imports import import_pair
                     import_pair(db,token,fields["ivy"],fields["pantops"])
@@ -390,10 +505,20 @@ def handler_for(db_path):
                     self.redirect("/")
                 elif path=="/configure-reminders":
                     from complied.reminders import configure
+                    if public_origin:
+                        from complied.microsoft_identity import graph_token
+                        from complied.microsoft import GraphHTTPTransport
+                        if user["role"]!="owner":
+                            raise PermissionError("Owner required")
+                        calendars=GraphHTTPTransport(graph_token(db,user["id"]),enabled=True).get_calendars()
+                        if fields["calendar_id"] not in {item["id"] for item in calendars}:
+                            raise ValueError("Select a Microsoft calendar")
                     configure(db,token,fields["recipient"],fields["calendar_id"])
                     self.redirect("/reminders")
                 elif path=="/queue-reminder":
                     from complied.reminders import enqueue
+                    if public_origin and fields.get("confirm_live")!="yes":
+                        raise ValueError("Confirm Microsoft delivery")
                     enqueue(db,token,int(fields["task_id"]),fields["channel"],int(fields["offset_days"]))
                     self.redirect("/reminders")
                 else:
