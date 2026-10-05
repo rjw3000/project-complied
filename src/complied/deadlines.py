@@ -26,6 +26,7 @@ def connect(path):
     db = sqlite3.connect(path)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA foreign_keys=ON")
+    db.execute("PRAGMA recursive_triggers=ON")
     with db:
         db.executescript(SCHEMA)
         db.execute("INSERT OR IGNORE INTO schema_versions VALUES(1)")
