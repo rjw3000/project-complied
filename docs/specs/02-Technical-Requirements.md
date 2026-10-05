@@ -62,3 +62,7 @@ Server-deny delegate payment initiation across every endpoint and worker path. O
 Retain evidence and receipts seven years under a reviewed start/hold policy; do not enable destructive deletion until that policy exists. Include backup restore evidence and secret/log redaction.
 
 Add behavior tests for store/period completeness, duplicate imports, signed refunds, source reconciliation, recurrence boundaries, notification deduplication/failure, delegated payment denial, revocation, package-change invalidation and unknown outcomes. Do not invent tax rates, tolerances or exemptions to make fixtures pass.
+
+## Prototype recurrence implementation
+
+See [recurrence contract](../RECURRENCE.md). The local implementation supports period lengths of 1/3/12 months with explicit anchor, effective range, short-month policy and reviewed holiday calendar coverage. It retains one task per obligation/period with immutable rule provenance and rejects competing rule versions until explicit reconciliation exists. Full obligation versioning remains a future requirement; no statutory rule is preloaded.

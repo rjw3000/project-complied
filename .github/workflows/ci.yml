@@ -23,3 +23,10 @@ jobs:
           python-version: '3.12'
       - run: python scripts/check_repository.py
       - run: python -m unittest discover -s tests -v
+      - name: Smoke test synthetic database and dashboard rendering
+        run: |
+          PYTHONPATH=src python -m complied.deadlines seed --db /tmp/complied-demo.sqlite3
+          PYTHONPATH=src python -m complied.recurrence --db /tmp/complied-demo.sqlite3
+          PYTHONPATH=src python -m complied.recurrence --db /tmp/complied-demo.sqlite3
+          PYTHONPATH=src python -m complied.deadlines list --db /tmp/complied-demo.sqlite3 --today 2026-10-05
+          PYTHONPATH=src python -c "from complied.deadlines import connect,dashboard; from complied.web import render; from datetime import date; db=connect('/tmp/complied-demo.sqlite3'); assert 'Synthetic demo only' in render(dashboard(db,date(2026,10,5)),date(2026,10,5)); db.close()"

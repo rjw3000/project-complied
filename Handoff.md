@@ -14,7 +14,7 @@ Internal tool for Whitewater Package Depot LLC and both stores. First priority: 
 
 Repository foundation and security completed. PR #6 merged at `8882590f0e0966fd68eebe26140c39e87647e320`; security issue #4 closed. That SHA is a verified milestone, not a guarantee of current HEAD. Fetch the live repository before editing. Other PRs/issues may have changed, including Dependabot updates; inspect before acting.
 
-No running application, production account connection, tax rule engine, notification delivery, or external execution exists. Python approval controls are a reference implementation, not a chosen production stack. The current policy assumes trusted approval objects; authentication, persistence, and concurrency-safe execution remain pending.
+A local synthetic dashboard is available; production account connections, tax calculations, notification delivery and external execution remain pending. Python approval controls are a reference implementation, not a chosen production stack. The current policy assumes trusted approval objects; authentication, persistence, and concurrency-safe execution remain pending.
 
 ## Follow-up answers received 5 October 2026
 
@@ -81,3 +81,11 @@ For new answers: update Project.md facts and remove/resolve the matching pending
 - 5 October 2026 — v0.3: follow-up answers recorded; replaced answered questions with concrete validation inputs. Prioritize deadline prototype and PostalMate imports. QBO-first assumptions are superseded.
 
 - 5 October 2026 — v0.4: jurisdiction and handling clarifications captured; implementation-ready specifications and milestone plan published. The Mermaid architecture is current; the old PNG is historical.
+
+## Local deadline prototype added
+
+ADR 001 selects Python standard library/SQLite for synthetic M1 only. Use README seed/run commands. Added persistent obligation/task schema, loopback read-only dashboard, review gates, duplicate task prevention, and behavior tests. Still pending: authenticated editing, versioned obligation changes, recurrence generation, notifications, imports and production selection. Existing approval module remains a reference. CI must validate this implementation; offline workspace prevented local execution. Do not call M1 complete yet.
+
+## Recurrence increment — 5 October 2026
+
+Previous prototype checks passed at 0d0d1d3. This increment adds schema v2, immutable schedule definitions, monthly/quarterly/annual generation and atomic conflict handling. Follow README to generate demo periods and docs/RECURRENCE.md for policy semantics. No real deadlines are populated. Next: authenticated editing and review/reconciliation UI, then durable reminder outbox. Full obligation versioning, background scheduling and notification delivery remain pending. Validate the latest PR head before merge.

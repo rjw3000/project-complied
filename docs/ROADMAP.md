@@ -28,3 +28,7 @@ Proposed incremental allowance $100/month, cap $150/month pending approval and c
 Each milestone uses a focused PR, appropriate behavior tests, repository checks, CodeQL and Gitleaks. Record results at the exact head. No bot auto-merge or auto-approval. Current security settings remain in force. Do not treat old 12–16 week/$5k–$15k estimates as commitments.
 
 November target is deadline tracking and assisted preparation; complete automation is not promised. After the first cycle, review discrepancies and operating effort; two consecutive reconciled cycles establish the later reliability target.
+
+## Current increment
+
+Local register/dashboard and initial tests are implemented in PR #8 (checks passed at 0d0d1d3). Recurrence increment adds rule provenance, migration and calendar-boundary tests. M1 remains partial pending authenticated editing and broader obligation versioning. M2 outbox can follow after rule review and reconciliation paths are in place.
