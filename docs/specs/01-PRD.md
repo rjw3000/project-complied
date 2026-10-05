@@ -1,59 +1,44 @@
-# Compliance Automation — Product Requirements
+# Project Complied — Product Requirements
 
-Version: 0.1-R | Date: 3 October 2026 | Status: Reconstructed draft
+Version: 0.4 | Updated: 5 October 2026 | Status: Implementation baseline; legal rules and stack pending verification
 
-This document reconstructs the proposed scope from the available conversation. It is not a verbatim recovery of the original draft. Unconfirmed details remain open.
+## Purpose and confirmed scope
 
-## Purpose
+Internal compliance tool for Whitewater Package Depot LLC, covering Ivy (Charlottesville City) and Pantops (Albemarle County), per owner. Prevent missed deadlines, identify federal/state/local obligations, and prepare accurate reviewable returns. [Project record](../../Project.md) holds confirmed facts; [roadmap](../ROADMAP.md) defines delivery.
 
-Give a business owner one place to discover obligations, track deadlines, gather records, prepare monthly sales-tax work, approve actions, and retain proof of completion. Start with an internal pilot using QuickBooks Online and Dropbox, with Virginia sales-tax preparation as the first recurring workflow.
+Employees and leased premises; no online or out-of-state sales reported. Shipping, packing, merchandise, mailbox rental, printing and freight; no notary. Discover taxes, fees, licenses, payroll duties and entity filings. Separate statutory obligations from contractual renewals. Known duties are monthly sales tax, annual state company filings and local business licenses; catalog completeness is unverified.
 
-## Users and responsibilities
+## Users and authority
 
-- Owner: confirms business facts, reviews exceptions, approves filings and separately approves payments.
-- Operator: maintains the calendar, resolves missing records, and prepares work for review.
-- Professional reviewer: validates tax treatment and applicable requirements when needed; engagement and cost are open.
+Owner manages facts, assignments, review and separate filing/payment approvals. Owner-approved delegates can perform duties except initiate payments. Until payment approval scope is clarified, default to owner-only payment approval and initiation. Enforce rights in the server, including revocation. A professional reviewer is optional and unarranged; never imply signoff.
 
-## Pilot scope
+## Initial workflow
 
-1. Capture entities, stores, jurisdictions, registrations, responsible people, and data sources.
-2. Create a reviewable obligation register with authoritative references, applicability rationale, effective dates, recurrence, and owner.
-3. Build a calendar of tasks, reminders, due dates, dependencies, and overdue exceptions.
-4. Connect authorized QuickBooks Online accounting data and Dropbox supporting records.
-5. Prepare a monthly sales-tax package with source totals, adjustments, exceptions, and supporting evidence.
-6. Present a concise approval view showing entity, jurisdiction, period, calculation version, amount, exceptions, and next action.
-7. Record approvals, receipts, reconciliation, and recovery actions.
+1. Register entity, both locations, activities and registrations.
+2. Review obligation suggestions with authoritative source, applicability reasoning, missing facts and due-date rule.
+3. Show upcoming, overdue, unresolved, review-ready and completed work; unresolved obligations remain visible.
+4. Import a monthly PostalMate export from each independent store database. Preserve per-store totals before creating the combined entity package.
+5. Validate gross sales, taxable physical goods, tax collected, refunds, adjustments and nontaxable categories against source reports.
+6. Resolve discrepancies, review an immutable preparation package and approve filing.
+7. Manually submit using the verified government route; attach acceptance/receipt evidence. Owner handles payment separately.
 
-Filing and payment are later phases, enabled only after Virginia's submission route and account access are verified. Discovery suggestions require review before becoming active obligations.
+QBO is bank-feed accounting support, not the sales-tax source. Dropbox holds dated evidence. Manual imports and evidence upload precede live connectors. Microsoft 365 email/calendar first; Google later.
 
-## Owner experience
+Owner reports physical goods taxed and tax collected/remitted, third-party shipping/packing treated as nontaxable, and handling immaterial. These are operating facts, not verified tax rules. Preserve handling amounts and classification exceptions; no blanket exemption or inferred discrepancy tolerance.
 
-The dashboard shows what is due, what needs attention, what is ready for approval, and what is complete. Each task opens its source records, calculation explanation, outstanding questions, and history. Changes to approved inputs return the package to review. Filing approval does not authorize payment.
+## Acceptance by milestone
 
-## Out of initial scope
+- Calendar: reviewed duties carry owner, period and verified deadline; unknown dates are visibly unresolved. Synthetic recurrence/overdue tests pass.
+- Reminders: persisted attempts, deduplication and delivery failure visibility; no duplicate event on retries.
+- Preparation: both store reports required; totals trace to hashes, mapping and rule versions; discrepancies block readiness unless explicitly reviewed under a defined policy.
+- Approval: delegate cannot initiate payment; stale or revoked approval cannot execute; filing cannot authorize payment.
+- Manual completion: filing and payment receipts tracked separately; sending is not acceptance.
+- Pilot: one rehearsed preparation cycle, then October sales/November submission if verified inputs and timing allow. Two consecutive reconciled cycles are the later reliability target.
 
-Multi-state automated filing, autonomous tax interpretation, unsupervised payments, commercial multi-tenant delivery, and replacing professional judgment are excluded from the pilot.
+## Capacity and budget
 
-## Proposed pilot acceptance criteria
+40 owner hours/month, no paid development. Proposed incremental software/hosting allowance $100/month with $150 cap; unapproved and not vendor quotes. Existing subscriptions excluded. November goal is reminders plus assisted preparation, not guaranteed full automation.
 
-- All owner-confirmed pilot obligations appear in the calendar with an accountable owner.
-- At least two consecutive monthly preparation cycles complete with documented reconciliation and review.
-- Every prepared amount traces to a source snapshot and approved calculation version.
-- Missing records or unresolved material exceptions prevent approval readiness.
-- No filing or payment executes without the relevant valid approval.
-- Duplicate-action and uncertain-submission recovery scenarios are demonstrated.
-- Owner preparation/review time is measured against a baseline; reduction target is agreed before pilot launch.
+## Dependencies and exclusions
 
-These criteria are proposed, not confirmed commitments.
-
-## Delivery and economics
-
-The earlier planning estimate was 12–16 weeks or longer for an internal pilot. It remains provisional because capacity details and integration constraints are unavailable here. The earlier $5,000–$15,000 reserve remains provisional pending integration, hosting, and professional-review costs.
-
-## Open decisions
-
-- Does QuickBooks identify stores through classes, locations, another dimension, or separate companies?
-- Is the Virginia tax-portal account established, and who has authority to file and pay?
-- Which Grokbot framework will coordinate development?
-- What entities, stores, registrations, filing frequencies, and historical records belong in the pilot?
-- Who provides professional review, and what are the retention and notification requirements?
+Await redacted PostalMate samples, registration notices, actual due dates/form, portal readiness, calendar choice and reviewed tax mappings. Stack/hosting remain open and need an ADR. Autonomous interpretation, portal automation, automatic payments and commercial tenancy are outside the first release. Seven-year retention required; legal triggers and holds need review.
