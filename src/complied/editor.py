@@ -114,6 +114,20 @@ def schedule_preview_page(proposal,preview,user):
     content+='<a href="/schedules">Back to schedules</a>'
     return page("Confirm schedule changes",content)
 
+
+def preparation_page(db):
+    import json
+    content='<p><a href="/">Dashboard</a></p><p>Normalized synthetic source packages. Actual PostalMate column mapping and tax treatment remain unverified. These are not submission-ready returns.</p>'
+    for row in db.execute("SELECT * FROM preparation_packages ORDER BY period DESC,id"):
+        manifest=json.loads(row["manifest"])
+        content+='<form><h2>'+escape(manifest["period"])+'</h2><p>Package '+escape(row["id"])+'</p>'
+        content+='<p>Status: source reconciled; return preparation pending.</p><table><tr><th>Store</th><th>Taxable net sales</th><th>Nontaxable net sales</th><th>Tax collected</th></tr>'
+        for source in manifest["sources"]:
+            content+='<tr>'+''.join('<td>'+escape(str(source[key]))+'</td>' for key in ["store_id","net_taxable_sales","net_nontaxable_sales","tax_collected"])+'</tr>'
+        content+='</table><p>Combined net sales: '+escape(manifest["totals"]["net_sales_control"])+' · Tax collected: '+escape(manifest["totals"]["tax_collected"])+'</p>'
+        content+='<details><summary>Source hashes and contract</summary><pre style="white-space:pre-wrap">'+escape(json.dumps(manifest,indent=2))+'</pre></details></form>'
+    return page("Monthly sales preparation",content)
+
 def handler_for(db_path):
     class Handler(BaseHTTPRequestHandler):
         def origin(self):
@@ -154,13 +168,15 @@ def handler_for(db_path):
                 form='<form method="post" action="/login">'+field("user","User")+field("password","Password",kind="password")+'<button>Sign in</button></form>'
                 self.respond(200,page("Project Complied sign-in",form))
                 return
-            if path not in ("/","/register","/reminders","/schedules"):
+            if path not in ("/","/register","/reminders","/schedules","/preparation"):
                 self.send_error(404)
                 return
             db=connect(db_path)
             try:
                 user=authenticate(db,self.token())
-                if path=="/schedules":
+                if path=="/preparation":
+                    content=preparation_page(db)
+                elif path=="/schedules":
                     content=schedules_page(db,user)
                 elif path=="/reminders":
                     content=reminders_page(db,user)
@@ -169,7 +185,7 @@ def handler_for(db_path):
                 else:
                     from complied.web import render
                     today=datetime.now(ZoneInfo("America/New_York")).date()
-                    content=render(dashboard(db,today),today).replace("<header>","<header><p><a href='/register'>Edit and review requirements</a> · <a href='/reminders'>Microsoft reminders</a> · <a href='/schedules'>Review schedules</a></p>",1)
+                    content=render(dashboard(db,today),today).replace("<header>","<header><p><a href='/register'>Edit and review requirements</a> · <a href='/reminders'>Microsoft reminders</a> · <a href='/schedules'>Review schedules</a> · <a href='/preparation'>Sales preparation</a></p>",1)
                 self.respond(200,content)
             except PermissionError:
                 self.redirect("/login")

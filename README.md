@@ -84,3 +84,11 @@ Sign in, open **Microsoft reminders**, configure destinations as owner and queue
 ## Review schedule changes
 
 After reviewing applicability, open **Review schedules**. Enter the authoritative rule, preview old/proposed deadlines and confirm the batch. Stale previews, completed-task replacement and uncertain external activity are blocked. Queued reminders cancel when their schedule changes. [Schedule review](docs/SCHEDULE-REVIEW.md).
+
+## Prepare synthetic monthly sales sources
+
+```sh
+PYTHONPATH=src python3 -m complied.imports --user owner-demo fixtures/synthetic/ivy-2026-10.csv fixtures/synthetic/pantops-2026-10.csv
+```
+
+Then sign in and open **Sales preparation** to review both store totals and source hashes. [Import contract](docs/SALES-IMPORTS.md). Actual PostalMate columns and tax-return calculations remain pending; packages are explicitly not return-ready.

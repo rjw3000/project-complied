@@ -38,3 +38,5 @@ Local dashboard/recurrence merged at b5f1055. Authenticated local editing adds a
 Authenticated editing/review merged green at 48a5a711. M2 increment implements durable outbox, owner destinations, calendar/email payloads and synthetic failure tests. Live OAuth transport, scheduler deployment and event reconciliation remain M2 acceptance gates.
 
 Schedule-review increment: authenticated rule entry and exact-preview confirmation; schema v5 retains before/after audit, blocks completed/uncertain external tasks, cancels queued stale reminders and binds new reminders to schedule revision. Next independent build is synthetic PostalMate import/reconciliation; actual column mapping awaits sample reports.
+
+M3 source increment: normalized synthetic import contract, immutable raw/source snapshots and both-store period validation are implemented. Authenticated UI displays source totals; package status remains not return-ready. Actual report mapping, refund semantics, reviewed classifications and return-line calculations await sample inputs.

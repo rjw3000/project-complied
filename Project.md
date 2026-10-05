@@ -106,3 +106,5 @@ PR #8 adds the local SQLite/read-only dashboard prototype; CI, CodeQL and Gitlea
 - 5 October 2026 — authenticated local edit/review merged at 48a5a711 after green checks. Microsoft reminder queue/preview and injected adapter now added; OAuth, live connection and account testing remain pending; explicit operator transport is disabled by default.
 
 - 5 October 2026 — schedule review increment: authenticated preview/confirmation, preserved task history, completed/external-outcome blocks, queued reminder cancellation and schedule revision binding. Main milestone 1159fbc contains prior PRs #7–#11; no live Microsoft account connected.
+
+- 5 October 2026 — PR #12 schedule review merged at ba66c78 after green checks. Sales-source increment adds synthetic normalized CSVs, immutable snapshots and same-month/two-store preparation manifests. Source reconciled does not mean return-ready; actual PostalMate mapping and tax rules remain unverified.

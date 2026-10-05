@@ -10,7 +10,7 @@ Read [Project.md](Project.md), [AGENTS.md](AGENTS.md), [README.md](README.md), [
 
 Main milestone 1159fbc contains merged PRs #7–#11: aligned specs, local SQLite register/dashboard, reviewed recurrence, authenticated requirement editing/review, audit trail and Microsoft reminder outbox/previews with explicitly enabled operator transport. Those changes passed 49 tests, smoke checks, CodeQL and Gitleaks. Fetch current main before editing.
 
-This increment adds authenticated schedule preview/confirmation, additive schema v5 and schedule-revision-bound reminders. See [schedule review](docs/SCHEDULE-REVIEW.md). Previous implementation remains synthetic local development; production hosting/identity and live integrations are not configured.
+Schedule preview/confirmation merged green in PR #12 at ba66c78. This increment adds schema v6 and authenticated normalized synthetic sales imports, immutable source snapshots and two-store preparation packages. See [schedule review](docs/SCHEDULE-REVIEW.md). Previous implementation remains synthetic local development; production hosting/identity and live integrations are not configured.
 
 ## Business scope
 
@@ -20,7 +20,7 @@ Owner has 40 hours/month; no paid development. Proposed incremental software/hos
 
 ## Next work
 
-1. Synthetic per-store import contract, source snapshot capture and reconciliation package; map actual PostalMate columns only after sample review.
+1. Validate actual PostalMate sample columns and refund/adjustment semantics against docs/SALES-IMPORTS.md. Synthetic imports/packages are implemented; real adapters, tax treatment and return-line calculations remain pending.
 2. Extend review workflow for externally created calendar events and unknown outcomes; never blindly resend.
 3. Provision production identity/hosting and Microsoft delegated OAuth/token refresh, dedicated calendar and recipient confirmation before live testing.
 4. Verify duty sources, registration/location reporting, actual tax form/frequency/deadline and portal route.
@@ -42,3 +42,5 @@ python3 -m unittest discover -s tests -v
 ```
 
 Use branches/PRs and validate the exact head with required checks. User has authorized PR creation and merge when green in this session; address review findings first. No bot auto-approval or auto-merge. No live secrets or business records in Git/CI. Maintain Project.md and this handoff with each milestone.
+
+Reminder compatibility fix: enqueue recognizes pre-v5 semantic identities and preserves original IDs; existing duplicate identities block dispatch for reconciliation, including unknown outcomes. Never regenerate a key to bypass uncertain prior delivery.
