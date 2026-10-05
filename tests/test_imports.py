@@ -104,3 +104,34 @@ class ImportTests(unittest.TestCase):
         with patch.object(imports,"authorize",side_effect=gate):
             with self.assertRaises(PermissionError): prepare(self.db,self.token,ids)
         self.assertEqual(self.db.execute("SELECT COUNT(*) FROM preparation_packages").fetchone()[0],0)
+
+    def test_browser_pair_atomic_and_idempotent(self):
+        from complied.imports import import_pair
+        ivy=raw()
+        pantops=raw("pantops")
+        key,manifest=import_pair(self.db,self.token,ivy,pantops)
+        self.assertEqual(manifest["totals"]["net_sales_control"],"10000.00")
+        self.assertEqual(key,import_pair(self.db,self.token,ivy,pantops)[0])
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM sales_snapshots").fetchone()[0],2)
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM preparation_packages").fetchone()[0],1)
+        with self.assertRaises(ValueError):
+            import_pair(self.db,self.token,raw(tax="1.001"),pantops)
+        with self.assertRaises(ValueError):
+            import_pair(self.db,self.token,raw(),raw("ivy"))
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM preparation_packages").fetchone()[0],1)
+    def test_browser_pair_revocation_inside_lock(self):
+        from unittest.mock import patch
+        from complied import imports
+        from complied.access import disable_user
+        original=imports.authorize
+        calls=[]
+        def gate(*args):
+            user=original(*args)
+            if not calls:
+                calls.append(1)
+                disable_user(self.db,"owner")
+            return user
+        with patch.object(imports,"authorize",side_effect=gate):
+            with self.assertRaises(PermissionError):
+                imports.import_pair(self.db,self.token,raw(),raw("pantops"))
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM sales_snapshots").fetchone()[0],0)

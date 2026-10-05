@@ -10,15 +10,37 @@ from zoneinfo import ZoneInfo
 from complied.access import authenticate,login,logout,mutate
 from complied.deadlines import connect,dashboard
 
-def page(title,content):
-    return ('<!doctype html><html lang="en"><meta charset="utf-8">'
+def page(title,content,public=False):
+    nav=('<nav aria-label="Main navigation"><a href="/">Overview</a>'
+         '<a href="/register">Requirements</a><a href="/schedules">Schedules</a>'
+         '<a href="/preparation">Sales preparation</a><a href="/reminders">Reminders</a></nav>')
+    header=('<header class="topbar"><a class="brand" href="/">◆ <span>PROJECT COMPLIED</span></a>'
+            +('' if public else nav)+
+            '<span class="environment">Internal prototype</span></header>')
+    return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            '<title>'+escape(title)+'</title><style>'
-            'body{font:16px system-ui;background:#f3f6fa;color:#192b40;margin:30px auto;max-width:1000px;padding:20px}'
-            'form{background:white;border:1px solid #d9e0ea;padding:18px;margin:18px 0;border-radius:10px}'
-            'label{display:block;margin:8px 0}input,select,textarea{font:inherit;padding:8px;max-width:90%}'
-            'button{font:inherit;background:#174c7e;color:white;padding:10px 16px;border:0;border-radius:6px}'
-            'textarea{width:90%}a{color:#174c7e}</style><h1>'+escape(title)+'</h1>'+content+'</html>')
+            '<title>'+escape(title)+' · Project Complied</title>'
+            '<style>'
+            ':root{color-scheme:light;--ink:#172b41;--muted:#50657b;--line:#dbe5ed;--bg:#f3f7f9;--blue:#174c7e}'
+            '*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,sans-serif}'
+            'a{color:var(--blue);text-underline-offset:3px}.topbar{display:flex;align-items:center;gap:24px;padding:16px max(24px,calc((100vw - 1180px)/2));background:#102b43;color:#fff;flex-wrap:wrap}'
+            '.brand{font-weight:800;letter-spacing:.07em;text-decoration:none;color:white;white-space:nowrap}.brand:first-letter{color:#77d6bc}'
+            'nav{display:flex;gap:18px;flex-wrap:wrap}nav a{color:#e4eef6;text-decoration:none;font-size:14px}nav a:hover,nav a:focus-visible{text-decoration:underline}'
+            '.environment{margin-left:auto;border:1px solid #6591a1;border-radius:99px;padding:3px 11px;color:#c5dfec;font-size:12px}'
+            'main{max-width:1180px;margin:auto;padding:36px 24px 72px}h1{font-size:clamp(28px,4vw,40px);letter-spacing:-.035em;line-height:1.16;margin:0 0 12px}'
+            'h2{font-size:22px;margin:0 0 10px}h3{margin:0 0 10px}p{margin:10px 0 16px}small,.muted{color:var(--muted)}'
+            'form,.panel,.card,.table{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 20px rgba(17,47,71,.04)}'
+            'form,.panel{padding:22px;margin:20px 0}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:24px 0}'
+            '.card{padding:19px}.card strong{display:block;font-size:30px;line-height:1.2}.card span{color:var(--muted);font-size:14px}'
+            '.notice{padding:16px 20px;border:1px solid #e6c987;background:#fff6df;border-radius:12px}.table{overflow:auto}'
+            'table{border-collapse:collapse;width:100%;text-align:left}th,td{padding:13px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#eaf0f5;font-size:13px;white-space:nowrap}tr:last-child td{border-bottom:0}'
+            'label{display:block;margin:12px 0;color:#344c63;font-weight:600}input,select,textarea{display:block;width:min(100%,680px);font:inherit;padding:10px 12px;border:1px solid #aabccc;border-radius:7px;background:white;color:var(--ink)}'
+            'input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid #54a9db;outline-offset:2px}'
+            'input[type=hidden]{display:none}textarea{min-height:95px}button{font:inherit;font-weight:650;background:var(--blue);color:white;padding:10px 17px;border:0;border-radius:7px;cursor:pointer}'
+            'button:hover{background:#0e395f}pre{overflow:auto;padding:14px;background:#f0f4f8;border-radius:8px}details{margin:16px 0}'
+            '@media(max-width:640px){.topbar{gap:12px;padding:16px 20px}.environment{margin-left:0}main{padding:28px 18px 54px}form,.panel{padding:17px}th,td{padding:10px;font-size:14px}}'
+            '</style></head><body>'+header+'<main><h1>'+escape(title)+'</h1>'+content+'</main></body></html>')
+
 
 def field(name,label,value="",kind="text"):
     return '<label>'+escape(label)+'<br><input type="'+escape(kind)+'" name="'+escape(name)+'" value="'+escape(str(value),quote=True)+'" required></label>'
@@ -115,9 +137,16 @@ def schedule_preview_page(proposal,preview,user):
     return page("Confirm schedule changes",content)
 
 
-def preparation_page(db):
+def preparation_page(db,user):
     import json
     content='<p><a href="/">Dashboard</a></p><p>Normalized synthetic source packages. Actual PostalMate column mapping and tax treatment remain unverified. These are not submission-ready returns.</p>'
+
+    content+='<form method="post" action="/upload-sales" enctype="multipart/form-data">'
+    content+=hidden("csrf",user["csrf"])
+    content+='<h2>Import both stores</h2><p>Choose one normalized CSV for Ivy and one for Pantops, for the same month. Each report must match the reviewed import contract. No tax return is calculated.</p>'
+    content+='<label>Ivy Road CSV<input type="file" name="ivy" accept=".csv,text/csv" required></label>'
+    content+='<label>Pantops CSV<input type="file" name="pantops" accept=".csv,text/csv" required></label>'
+    content+='<button>Validate and prepare source package</button></form>'
     for row in db.execute("SELECT * FROM preparation_packages ORDER BY period DESC,id"):
         manifest=json.loads(row["manifest"])
         content+='<form><h2>'+escape(manifest["period"])+'</h2><p>Package '+escape(row["id"])+'</p>'
@@ -197,7 +226,7 @@ def handler_for(db_path):
             path=urlsplit(self.path).path
             if path=="/login":
                 form='<form method="post" action="/login">'+field("user","User")+field("password","Password",kind="password")+'<button>Sign in</button></form>'
-                self.respond(200,page("Project Complied sign-in",form))
+                self.respond(200,page("Project Complied sign-in",form,public=True))
                 return
             if path not in ("/","/register","/reminders","/schedules","/preparation","/package","/package-export"):
                 self.send_error(404)
@@ -214,7 +243,7 @@ def handler_for(db_path):
                 elif path=="/package":
                     content=package_page(db,user,package_query(self.path))
                 elif path=="/preparation":
-                    content=preparation_page(db)
+                    content=preparation_page(db,user)
                 elif path=="/schedules":
                     content=schedules_page(db,user)
                 elif path=="/reminders":
@@ -237,18 +266,26 @@ def handler_for(db_path):
                 self.send_error(403)
                 return
             path=urlsplit(self.path).path
-            if path not in ("/login","/logout","/create","/edit","/review","/configure-reminders","/queue-reminder","/schedule-preview","/schedule-confirm","/package-review"):
+            if path not in ("/login","/logout","/create","/edit","/review","/configure-reminders","/queue-reminder","/schedule-preview","/schedule-confirm","/package-review","/upload-sales"):
                 self.send_error(404)
                 return
             try:
-                length=int(self.headers.get("Content-Length","0"))
-                if not 0<length<=16384 or self.headers.get("Content-Type","").split(";")[0]!="application/x-www-form-urlencoded":
-                    self.send_error(400)
-                    return
-                values=parse_qs(self.rfile.read(length).decode("utf-8"),keep_blank_values=True,max_num_fields=24)
-                if any(len(v)!=1 for v in values.values()):
-                    raise ValueError("Duplicate form fields")
-                fields={k:v[0] for k,v in values.items()}
+                if self.headers.get("Transfer-Encoding") or len(self.headers.get_all("Content-Length",[]))!=1:
+                    raise ValueError("Ambiguous body length")
+                length=int(self.headers["Content-Length"])
+                content_type=self.headers.get("Content-Type","")
+                if path=="/upload-sales":
+                    from complied.uploads import MAX_REQUEST,parse_upload
+                    if not 0<length<=MAX_REQUEST:
+                        raise ValueError("Upload exceeds the request limit")
+                    fields=parse_upload(content_type,self.rfile.read(length))
+                else:
+                    if not 0<length<=16384 or content_type.split(";")[0]!="application/x-www-form-urlencoded":
+                        raise ValueError("Expected a form")
+                    values=parse_qs(self.rfile.read(length).decode("utf-8"),keep_blank_values=True,max_num_fields=24)
+                    if any(len(v)!=1 for v in values.values()):
+                        raise ValueError("Duplicate form fields")
+                    fields={k:v[0] for k,v in values.items()}
             except (ValueError,UnicodeError):
                 self.send_error(400)
                 return
@@ -265,6 +302,10 @@ def handler_for(db_path):
                 if path=="/logout":
                     logout(db,token)
                     self.redirect("/login","complied_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0")
+                elif path=="/upload-sales":
+                    from complied.imports import import_pair
+                    import_pair(db,token,fields["ivy"],fields["pantops"])
+                    self.redirect("/preparation")
                 elif path=="/package-review":
                     from complied.package_review import record_review
                     record_review(db,token,fields["package_id"],int(fields["revision"]),fields["decision"],fields["notes"],fields["context"])

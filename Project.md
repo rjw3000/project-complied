@@ -110,3 +110,7 @@ PR #8 adds the local SQLite/read-only dashboard prototype; CI, CodeQL and Gitlea
 - 5 October 2026 — PR #12 schedule review merged at ba66c78 after green checks. Sales-source increment adds synthetic normalized CSVs, immutable snapshots and same-month/two-store preparation manifests. Source reconciled does not mean return-ready; actual PostalMate mapping and tax rules remain unverified.
 
 - 5 October 2026 — source-review increment: exact package/context decisions, review history and authenticated export. No government submission/payment approval produced; actual mapping, tax rules and portal details remain open.
+
+## UI and deployment increment (5 October 2026)
+
+The internal prototype uses one consistent responsive shell with browser upload of both normalized per-store monthly CSVs. Import validation preserves immutable source hashes and keeps packages marked not return-ready. Microsoft sign-in, live reminders and hosting require tenant/app setup, dedicated recipient/calendar selection, secrets and a private persistent deployment. Do not treat an uploaded normalized CSV as a verified native PostalMate export.

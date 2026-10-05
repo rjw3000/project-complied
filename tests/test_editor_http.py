@@ -121,3 +121,51 @@ class EditorHTTPTests(unittest.TestCase):
         status,headers,_=self.request("GET","/package-export?id="+package_id+"%0D%0AX-Injected%3Ayes",cookie=cookie)
         self.assertEqual(status,404)
         self.assertNotIn("X-Injected",headers)
+
+    def test_browser_uploads_auth_csrf_atomic_and_size(self):
+        from complied.access import authenticate
+        from test_imports import raw
+        def multipart(fields,boundary="CompliedBoundary0123"):
+            chunks=[]
+            for name,content in fields:
+                chunks.append(("--"+boundary+"\r\nContent-Disposition: form-data; name=\""+name+"\""+
+                    ("; filename=\"report.csv\"" if name in ("ivy","pantops") else "")+
+                    "\r\nContent-Type: "+("text/csv" if name in ("ivy","pantops") else "text/plain")+
+                    "\r\n\r\n").encode()+content+b"\r\n")
+            return b"".join(chunks)+("--"+boundary+"--\r\n").encode()
+        def post(fields,ctype="multipart/form-data; boundary=CompliedBoundary0123",cookie=None):
+            connection=http.client.HTTPConnection("127.0.0.1",self.server.server_port)
+            body=multipart(fields)
+            headers={"Host":"127.0.0.1:"+str(self.server.server_port),
+                     "Origin":self.origin,"Content-Type":ctype}
+            if cookie: headers["Cookie"]=cookie
+            connection.request("POST","/upload-sales",body,headers)
+            response=connection.getresponse()
+            result=response.status
+            response.read()
+            connection.close()
+            return result
+        _,headers,_=self.request("POST","/login",{"user":"demo","password":self.password})
+        cookie=headers["Set-Cookie"].split(";")[0]
+        db=connect(self.path)
+        csrf=authenticate(db,cookie.split("=",1)[1])["csrf"]
+        db.close()
+        fields=[("csrf",csrf.encode()),("ivy",raw()),("pantops",raw("pantops"))]
+        self.assertEqual(post(fields),403)
+        self.assertEqual(post([("csrf",b"wrong")]+fields[1:],cookie=cookie),403)
+        self.assertEqual(post(fields,ctype="text/plain",cookie=cookie),400)
+        self.assertEqual(post(fields+[("ivy",raw())],cookie=cookie),400)
+        self.assertEqual(post([("csrf",csrf.encode()),("ivy",raw()),("pantops",raw("pantops",tax="NaN"))],cookie=cookie),409)
+        db=connect(self.path)
+        self.assertEqual(db.execute("SELECT COUNT(*) FROM sales_snapshots").fetchone()[0],0)
+        db.close()
+        self.assertEqual(post(fields,cookie=cookie),303)
+        self.assertEqual(post(fields,cookie=cookie),303)
+        db=connect(self.path)
+        self.assertEqual(db.execute("SELECT COUNT(*) FROM sales_snapshots").fetchone()[0],2)
+        self.assertEqual(db.execute("SELECT COUNT(*) FROM preparation_packages").fetchone()[0],1)
+        db.close()
+        page=self.request("GET","/preparation",cookie=cookie)[2]
+        self.assertIn('enctype="multipart/form-data"',page)
+        self.assertIn("Review source package",page)
+        self.assertIn("Main navigation",page)
