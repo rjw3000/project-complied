@@ -1,6 +1,6 @@
 # Project Complied — Project Record
 
-Version: 0.4 | Updated: 5 October 2026 | Owner: RJ Williams
+Version: 0.5 | Updated: 5 October 2026 | Owner: RJ Williams
 Status: Internal pilot; synthetic local deadline prototype and recurrence under development
 
 ## Purpose and authority
@@ -77,7 +77,7 @@ Main protection requires pull requests, current branches, resolved conversations
 
 PR #6 merged as `8882590f0e0966fd68eebe26140c39e87647e320`; issue #4 closed. All three checks passed on that PR before merge. This is not evidence of application completion or production readiness.
 
-Not implemented: application UI/auth, live connectors, verified obligation catalog, tax calculation engine, durable approval service, operation ledger, filing/payment adapters, calendar/email delivery, production deployment.
+Implemented in the local synthetic prototype: dashboard, authenticated editing/review, recurrence and reminder outbox/previews. Still pending: production identity/hosting, verified obligation catalog, tax calculations, durable filing/payment execution, live account connections and automated delivery.
 
 ## Source and schedule note
 
@@ -104,3 +104,5 @@ PR #8 adds the local SQLite/read-only dashboard prototype; CI, CodeQL and Gitlea
 - 5 October 2026 — specifications, local dashboard and recurrence merged into main at b5f1055 after green checks. Local authenticated editing/review increment now in development; Microsoft reminders follow. Production identity remains unselected.
 
 - 5 October 2026 — authenticated local edit/review merged at 48a5a711 after green checks. Microsoft reminder queue/preview and injected adapter now added; OAuth, live connection and account testing remain pending; explicit operator transport is disabled by default.
+
+- 5 October 2026 — schedule review increment: authenticated preview/confirmation, preserved task history, completed/external-outcome blocks, queued reminder cancellation and schedule revision binding. Main milestone 1159fbc contains prior PRs #7–#11; no live Microsoft account connected.

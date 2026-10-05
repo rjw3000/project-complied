@@ -36,3 +36,5 @@ Local register/dashboard and initial tests are implemented in PR #8 (checks pass
 Local dashboard/recurrence merged at b5f1055. Authenticated local editing adds actor audit, optimistic revisions and stale schedule invalidation. M1 still needs explicit reviewed schedule reconciliation; production identity and full obligation versioning remain future gates. M2 reminder outbox is next.
 
 Authenticated editing/review merged green at 48a5a711. M2 increment implements durable outbox, owner destinations, calendar/email payloads and synthetic failure tests. Live OAuth transport, scheduler deployment and event reconciliation remain M2 acceptance gates.
+
+Schedule-review increment: authenticated rule entry and exact-preview confirmation; schema v5 retains before/after audit, blocks completed/uncertain external tasks, cancels queued stale reminders and binds new reminders to schedule revision. Next independent build is synthetic PostalMate import/reconciliation; actual column mapping awaits sample reports.

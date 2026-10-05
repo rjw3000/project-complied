@@ -61,3 +61,27 @@ class EditorHTTPTests(unittest.TestCase):
     def test_untrusted_host_and_unknown_route(self):
         self.assertEqual(self.request("GET","/",host="attacker.invalid")[0],403)
         self.assertEqual(self.request("POST","/payment",{"action":"send"})[0],404)
+
+    def test_schedule_preview_http(self):
+        from complied.deadlines import add_obligation
+        db=connect(self.path)
+        add_obligation(db,id="d",title="Demo",jurisdiction="Demo",owner="Demo",status="applicable",source="urn:demo",reviewed=True)
+        db.close()
+        status,headers,_=self.request("POST","/login",{"user":"demo","password":self.password})
+        cookie=headers["Set-Cookie"].split(";")[0]
+        db=connect(self.path)
+        csrf=authenticate(db,cookie.split("=",1)[1])["csrf"]
+        db.close()
+        self.assertIn("Preview schedule",self.request("GET","/schedules",cookie=cookie)[2])
+        fields=dict(csrf=csrf,obligation_id="d",anchor="2026-01-01",effective_start="2026-01-01",
+                    effective_end="2027-01-01",first_period="2026-10",count="1",period_months="1",
+                    due_day="15",due_month_offset="0",short_month="reject",roll="none",
+                    calendar_start="",calendar_end="",holidays="",source="urn:demo",reason="Synthetic")
+        status,_,body=self.request("POST","/schedule-preview",fields,cookie)
+        self.assertEqual(status,200)
+        self.assertIn("2026-11-15",body)
+        db=connect(self.path)
+        proposal=db.execute("SELECT id FROM schedule_proposals").fetchone()[0]
+        self.assertEqual(db.execute("SELECT COUNT(*) FROM tasks").fetchone()[0],0)
+        db.close()
+        self.assertEqual(self.request("POST","/schedule-confirm",dict(csrf=csrf,proposal_id=proposal),cookie)[0],303)
