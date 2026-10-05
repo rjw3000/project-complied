@@ -37,7 +37,11 @@ def page(title,content,public=False):
             'label{display:block;margin:12px 0;color:#344c63;font-weight:600}input,select,textarea{display:block;width:min(100%,680px);font:inherit;padding:10px 12px;border:1px solid #aabccc;border-radius:7px;background:white;color:var(--ink)}'
             'input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid #54a9db;outline-offset:2px}'
             'input[type=hidden]{display:none}textarea{min-height:95px}button{font:inherit;font-weight:650;background:var(--blue);color:white;padding:10px 17px;border:0;border-radius:7px;cursor:pointer}'
-            'button:hover{background:#0e395f}pre{overflow:auto;padding:14px;background:#f0f4f8;border-radius:8px}details{margin:16px 0}'
+            'button:hover{background:#0e395f}.button-link{display:inline-block;background:#174c7e;color:white;text-decoration:none;padding:10px 17px;border-radius:7px;font-weight:650}'
+            '.steps{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0;margin:24px 0}.steps li{padding:12px;background:#e6edf2;border-radius:10px;color:#385269;font-weight:650}.steps .current{background:#174c7e;color:white}'
+            '.action-card{background:#e7f5f1;border:1px solid #9dd0bf;border-radius:14px;padding:23px;margin:22px 0}.badge{font-size:12px;font-weight:700;display:inline-block;padding:3px 9px;border-radius:99px;background:#e6eef4;color:#174c7e;vertical-align:middle}'
+            '.checks{list-style:none;padding:0}.checks li{border-bottom:1px solid var(--line);padding:12px 0}.checks li:last-child{border:0}.checks p{color:var(--muted);margin:4px 0}'
+            'pre{overflow:auto;padding:14px;background:#f0f4f8;border-radius:8px}details{margin:16px 0}'
             '@media(max-width:640px){.topbar{gap:12px;padding:16px 20px}.environment{margin-left:0}main{padding:28px 18px 54px}form,.panel{padding:17px}th,td{padding:10px;font-size:14px}}'
             '</style></head><body>'+header+'<main><h1>'+escape(title)+'</h1>'+content+'</main></body></html>')
 
@@ -137,46 +141,102 @@ def schedule_preview_page(proposal,preview,user):
     return page("Confirm schedule changes",content)
 
 
-def preparation_page(db,user):
-    import json
-    content='<p><a href="/">Dashboard</a></p><p>Normalized synthetic source packages. Actual PostalMate column mapping and tax treatment remain unverified. These are not submission-ready returns.</p>'
+def steps(active):
+    names=(("upload","1 · Upload"),("reconcile","2 · Reconcile"),("review","3 · Review"))
+    return '<ol class="steps" aria-label="Monthly workflow">'+''.join(
+        '<li'+(' class="current" aria-current="step"' if name==active else '')+'>'+label+'</li>'
+        for name,label in names)+'</ol>'
 
-    content+='<form method="post" action="/upload-sales" enctype="multipart/form-data">'
+def preparation_page(db,user):
+    from complied.workflow import months
+    items=months(db)
+    content='<p class="muted">One legal entity · Ivy Road and Pantops · source review for each month.</p>'
+    active="upload" if not items else ("review" if items[0]["review_state"]=="sources_reviewed" else "reconcile")
+    content+=steps(active)
+    if items:
+        first=items[0]
+        content+='<section class="action-card"><h2>Next action · '+escape(first["manifest"]["period"])+'</h2>'
+        content+='<p>'+escape(first["next_action"])+'</p><a class="button-link" href="'+escape(first["next_href"],quote=True)+'">Continue monthly workflow</a></section>'
+    else:
+        content+='<section class="action-card"><h2>Start a monthly package</h2><p>Upload one normalized CSV from each store for the same month.</p><a href="#upload">Go to upload</a></section>'
+    content+='<form id="upload" method="post" action="/upload-sales" enctype="multipart/form-data">'
     content+=hidden("csrf",user["csrf"])
-    content+='<h2>Import both stores</h2><p>Choose one normalized CSV for Ivy and one for Pantops, for the same month. Each report must match the reviewed import contract. No tax return is calculated.</p>'
+    content+='<h2>Upload store reports</h2><p>Use the normalized monthly CSV contract. Actual PostalMate report columns still need a reviewed mapping. Each file is limited to 64 KiB.</p>'
     content+='<label>Ivy Road CSV<input type="file" name="ivy" accept=".csv,text/csv" required></label>'
     content+='<label>Pantops CSV<input type="file" name="pantops" accept=".csv,text/csv" required></label>'
-    content+='<button>Validate and prepare source package</button></form>'
-    for row in db.execute("SELECT * FROM preparation_packages ORDER BY period DESC,id"):
-        manifest=json.loads(row["manifest"])
-        content+='<form><h2>'+escape(manifest["period"])+'</h2><p>Package '+escape(row["id"])+'</p>'
-        content+='<p><a href="/package?id='+escape(row["id"],quote=True)+'">Review source package</a></p><p>Status: source reconciled; return preparation pending.</p><table><tr><th>Store</th><th>Taxable net sales</th><th>Nontaxable net sales</th><th>Tax collected</th></tr>'
-        for source in manifest["sources"]:
-            content+='<tr>'+''.join('<td>'+escape(str(source[key]))+'</td>' for key in ["store_id","net_taxable_sales","net_nontaxable_sales","tax_collected"])+'</tr>'
-        content+='</table><p>Combined net sales: '+escape(manifest["totals"]["net_sales_control"])+' · Tax collected: '+escape(manifest["totals"]["tax_collected"])+'</p>'
-        content+='<details><summary>Source hashes and contract</summary><pre style="white-space:pre-wrap">'+escape(json.dumps(manifest,indent=2))+'</pre></details></form>'
+    content+='<button>Validate both stores</button></form>'
+    if not items:
+        content+='<section class="panel"><h2>No packages yet</h2><p>Once both reports pass validation, this page will show the reconciliation and review actions.</p></section>'
+    for item in items:
+        manifest=item["manifest"]
+        period=escape(manifest["period"])
+        key=item["package_id"]
+        label={"needs_review":"Source review needed","sources_reviewed":"Source totals reviewed",
+               "needs_information":"Needs information","rejected":"Rejected"}[item["review_state"]]
+        content+='<section class="panel"><h2>'+period+' <span class="badge">'+escape(label)+'</span></h2>'
+        content+='<p>Combined net sales '+escape(manifest["totals"]["net_sales_control"])+' · Tax collected '+escape(manifest["totals"]["tax_collected"])+'</p>'
+        content+='<p>'+escape(item["next_action"])+'</p><p><a href="/reconcile?id='+key+'">Inspect reconciliation</a> · <a href="/package?id='+key+'">Review source package</a></p>'
+        content+='<small>Source package '+key[:12]+'… · Return preparation pending</small>'
+        older=[row["id"] for row in db.execute("SELECT id FROM preparation_packages WHERE period=?",(manifest["period"],)) if row["id"]!=key]
+        if older:
+            content+='<details><summary>Earlier packages for this month ('+str(len(older))+')</summary><ul>'
+            content+=''.join('<li><a href="/reconcile?id='+old+'">'+old[:12]+'…</a></li>' for old in older)
+            content+='</ul></details>'
+        content+='</section>'
+    content+='<p class="notice">Passing source controls does not establish a tax amount or a submission-ready return. Filing and payment remain separate.</p>'
     return page("Monthly sales preparation",content)
 
+def reconcile_page(db,package_id):
+    from complied.workflow import assess
+    data=assess(db,package_id)
+    manifest=data["manifest"]
+    content='<p><a href="/preparation">Monthly packages</a> · '+escape(manifest["period"])+'</p>'
+    content+=steps("reconcile")
+    content+='<p>Compare the two store controls with the combined entity total. These checks revalidate the stored CSV bytes and arithmetic.</p>'
+    content+='<div class="table"><table><caption>Selected store totals</caption><thead><tr><th>Store</th><th>Taxable net</th><th>Nontaxable net</th><th>Net sales control</th><th>Tax collected</th></tr></thead><tbody>'
+    for source in manifest["sources"]:
+        content+='<tr>'+''.join('<td>'+escape(str(source[field]))+'</td>' for field in
+            ("store_id","net_taxable_sales","net_nontaxable_sales","net_sales_control","tax_collected"))+'</tr>'
+    content+='<tr><th>Combined LLC</th>'+''.join('<td>'+escape(manifest["totals"][field])+'</td>' for field in
+        ("net_taxable_sales","net_nontaxable_sales","net_sales_control","tax_collected"))+'</tr></tbody></table></div>'
+    content+='<section class="panel"><h2>Reconciliation checks</h2><ul class="checks">'
+    for check in data["checks"]:
+        content+='<li><strong>'+escape(check["label"])+'</strong> <span class="badge">'+escape(check["state"])+'</span><p>'+escape(check["detail"])+'</p></li>'
+    content+='</ul></section>'
+    if data["alternatives"]:
+        content+='<details><summary>Other imported versions for this month</summary><ul>'
+        content+=''.join('<li>'+escape(key)+'</li>' for key in data["alternatives"])
+        content+='</ul><p>Compare these versions and document which reports were selected in the review notes.</p></details>'
+    content+='<details><summary>Selected snapshot hashes</summary><ul>'
+    content+=''.join('<li>'+escape(source["store_id"])+': '+escape(source["snapshot_id"])+'</li>' for source in manifest["sources"])
+    content+='</ul></details>'
+    content+='<section class="action-card"><h2>Next: source review</h2><p>Record whether these source totals can be accepted, need more information or should be rejected.</p><a class="button-link" href="/package?id='+package_id+'">Continue to review</a></section>'
+    content+='<p class="notice">Tax classifications and government return lines remain unverified; this package is not ready to file.</p>'
+    return page("Reconcile monthly sales",content)
 
 def package_page(db,user,package_id):
-    from complied.package_review import summary,context
-    data=summary(db,package_id)
+    from complied.workflow import assess
+    from complied.package_review import context
+    data=assess(db,package_id)
     context_hash,_=context(db,data["manifest"])
-    content='<p><a href="/preparation">Sales preparation</a></p>'
-    content+='<p>Package '+escape(package_id)+' · Period '+escape(data["manifest"]["period"])+'</p>'
-    content+='<p>Source-review status: '+escape(data["review_state"])+' · Not return-ready.</p>'
-    content+='<h2>Open blockers</h2><ul>'+''.join('<li>'+escape(blocker)+'</li>' for blocker in data["blockers"])+'</ul>'
-    content+='<p>Review each selected source hash and consider other known versions for this month.</p><pre style="white-space:pre-wrap">'+escape(__import__("json").dumps(data["manifest"],indent=2))+'</pre>'
-    content+='<p>Known source versions: '+escape(", ".join(data["source_versions"]))+'</p>'
-    content+='<form method="post" action="/package-review">'
+    content='<p><a href="/preparation">Monthly packages</a> · <a href="/reconcile?id='+package_id+'">Reconciliation</a></p>'
+    content+=steps("review")
+    content+='<p>Period '+escape(data["manifest"]["period"])+' · Source status: <strong>'+escape(data["review_state"].replace("_"," "))+'</strong>.</p>'
+    content+='<p>Selected net sales: '+escape(data["manifest"]["totals"]["net_sales_control"])+' · Tax collected: '+escape(data["manifest"]["totals"]["tax_collected"])+'</p>'
+    content+='<section class="panel"><h2>Next action</h2><p>'+escape(data["next_action"])+'</p></section>'
+    content+='<section class="panel"><h2>Open blockers</h2><ul>'+''.join('<li>'+escape(blocker)+'</li>' for blocker in data["blockers"])+'</ul></section>'
+    content+='<p>Compare each selected snapshot hash and any other imported version before deciding. <a href="/reconcile?id='+package_id+'">See detailed totals and checks</a>.</p>'
+    content+='<form method="post" action="/package-review"><h2>Record source decision</h2>'
     content+=hidden("csrf",user["csrf"])+hidden("package_id",package_id)+hidden("revision",data["review_revision"])+hidden("context",context_hash)
     content+='<label>Source decision<select name="decision"><option value="sources_reviewed">Source totals reviewed</option><option value="needs_information">Needs information</option><option value="rejected">Reject source package</option></select></label>'
-    content+='<label>Review notes<textarea name="notes" required maxlength="4000"></textarea></label><button>Record source review</button></form>'
-    content+='<p>This decision does not approve government submission or payment.</p><a href="/package-export?id='+package_id+'">Download source review packet</a>'
+    content+='<label>Review notes<textarea name="notes" required maxlength="4000" placeholder="Explain the selected store reports, any differences and next action."></textarea></label><button>Record source review</button></form>'
+    content+='<p>Source review does not authorize government submission or payment. <a href="/package-export?id='+package_id+'">Download source review packet</a>.</p>'
     content+='<h2>Review history</h2>'
+    if not data["reviews"]:
+        content+='<p class="muted">No source decisions recorded yet.</p>'
     for review in data["reviews"]:
-        content+='<p>'+escape(review["actor"]+' · '+review["decision"]+' · '+review["notes"])+'</p>'
-    return page("Monthly package review",content)
+        content+='<section class="panel"><strong>'+escape(review["actor"]+' · '+review["decision"].replace("_"," "))+'</strong><p>'+escape(review["notes"])+'</p></section>'
+    return page("Review monthly source package",content)
 
 def package_query(path):
     query=parse_qs(urlsplit(path).query,max_num_fields=2)
@@ -228,7 +288,7 @@ def handler_for(db_path):
                 form='<form method="post" action="/login">'+field("user","User")+field("password","Password",kind="password")+'<button>Sign in</button></form>'
                 self.respond(200,page("Project Complied sign-in",form,public=True))
                 return
-            if path not in ("/","/register","/reminders","/schedules","/preparation","/package","/package-export"):
+            if path not in ("/","/register","/reminders","/schedules","/preparation","/package","/reconcile","/package-export"):
                 self.send_error(404)
                 return
             db=connect(db_path)
@@ -240,6 +300,8 @@ def handler_for(db_path):
                     self.respond(200,export_package(db,self.token(),package_id),content_type="application/json; charset=utf-8",
                                  download=True)
                     return
+                elif path=="/reconcile":
+                    content=reconcile_page(db,package_query(self.path))
                 elif path=="/package":
                     content=package_page(db,user,package_query(self.path))
                 elif path=="/preparation":
@@ -253,7 +315,8 @@ def handler_for(db_path):
                 else:
                     from complied.web import render
                     today=datetime.now(ZoneInfo("America/New_York")).date()
-                    content=render(dashboard(db,today),today).replace("<header>","<header><p><a href='/register'>Edit and review requirements</a> · <a href='/reminders'>Microsoft reminders</a> · <a href='/schedules'>Review schedules</a> · <a href='/preparation'>Sales preparation</a></p>",1)
+                    from complied.workflow import months
+                    content=render(dashboard(db,today),today,months(db))
                 self.respond(200,content)
             except PermissionError:
                 self.redirect("/login")

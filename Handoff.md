@@ -54,3 +54,7 @@ Source-write hardening: every application connection enables recursive SQLite tr
 ## Browser workflow increment (5 October 2026)
 
 A responsive common UI shell and authenticated two-store CSV upload flow are under development. Browser uploads accept only the documented normalized monthly CSV contract, with per-file 64 KiB and total 150 KiB limits. The pair import is atomic, idempotent and source-hashed; a failed report leaves no new source snapshots or package. Actual PostalMate export mapping is still an input. Microsoft tenant registration, consent, selected calendar/recipient, token refresh and production hosting credentials are not yet provisioned.
+
+## Guided owner flow (5 October 2026)
+
+Owner overview now surfaces overdue/unverified obligations and the next monthly source action. Upload → reconcile → review is a linked browser path. Internal reconciliation verifies per-store control arithmetic, combined source totals, stored hashes and alternate versions, then shows the independent statutory/tax mapping work as pending. Review decisions remain append-only and source-only. This is still a synthetic normalized CSV pilot; obtain redacted native PostalMate samples before production mapping.

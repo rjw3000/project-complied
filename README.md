@@ -96,3 +96,7 @@ Or sign in and open **Sales preparation** to upload both normalized CSVs in the 
 ## Review monthly source evidence
 
 Open **Sales preparation → Review source package** to record source review, request information or reject a package. Download a signed-in JSON source packet with hashes, totals, review history and blockers. Source reviews become stale when another version for the month is imported. [Package review details](docs/PACKAGE-REVIEW.md). Reviewing sources does not approve a tax return or payment.
+
+## Guided owner workflow
+
+Sign in to see **Monthly sales** and the next action for the most recent package. Open **Sales preparation** to upload two normalized reports, inspect **Reconcile monthly sales** for per-store controls, entity totals, hashes and alternative versions, then **Review monthly source package** to record a source decision. Corrections create a new immutable package and make prior reviews of that month stale. The guided checks verify the normalized contract only; actual PostalMate mappings, tax treatment and return lines remain to be verified. The dashboard never marks a return filing-ready.
