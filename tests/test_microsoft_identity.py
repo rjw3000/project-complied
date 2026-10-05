@@ -77,3 +77,24 @@ class IdentityTests(unittest.TestCase):
         from complied.microsoft_worker import run_once
         with self.assertRaises(PermissionError):
             run_once(self.db)
+    def test_enabled_worker_dispatches_once_with_owner_connection(self):
+        from complied.deadlines import add_obligation,add_task
+        from complied.reminders import configure,enqueue
+        from complied.microsoft_worker import run_once
+        from complied.microsoft import GraphHTTPTransport
+        _,browser=identity.begin(self.db,"login")
+        session,_=identity.finish(self.db,browser,{"state":"expected","code":"demo"})
+        _,browser=identity.begin(self.db,"connect",session)
+        identity.finish(self.db,browser,{"state":"expected","code":"demo"},session)
+        add_obligation(self.db,id="synthetic",title="Synthetic deadline",jurisdiction="Demo",
+                       owner="Owner",status="applicable",source="urn:synthetic",reviewed=True)
+        add_task(self.db,"synthetic","2026-10","2026-11-15")
+        task_id=self.db.execute("SELECT id FROM tasks").fetchone()[0]
+        configure(self.db,session,"owner@example.invalid","calendar-demo")
+        enqueue(self.db,session,task_id,"calendar")
+        with patch.dict(os.environ,{"COMPLIED_LIVE_SEND":"1"}):
+            with patch.object(GraphHTTPTransport,"post",return_value=(201,{"id":"synthetic-event"})) as post:
+                self.assertEqual(run_once(self.db),"created")
+                self.assertIsNone(run_once(self.db))
+                self.assertEqual(post.call_count,1)
+        self.assertEqual(self.db.execute("SELECT status FROM reminder_outbox").fetchone()[0],"created")
