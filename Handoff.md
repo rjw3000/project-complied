@@ -93,3 +93,7 @@ Previous prototype checks passed at 0d0d1d3. This increment adds schema v2, immu
 ## Authenticated editing increment
 
 PRs #7/#8/#9 merged after passing checks; main milestone b5f1055. This increment adds local scrypt accounts, expiring/revocable sessions, CSRF-protected edit/review forms, revision-bound schedules and append-only change audit. Existing approved dates become unresolved after review changes. No payment endpoint exists; delegate payment-initiation authorization is denied. Next implementation: durable Microsoft reminder outbox and adapter tests. Production Entra identity, calendar/mail consent and actual delivery require account configuration. Follow README and docs/AUTHENTICATED-EDITING.md.
+
+## Microsoft reminder increment
+
+Authenticated edit/review PR #10 merged green at 48a5a711. Reminder queue/preview adds owner-configured destinations, email/calendar Graph payloads, durable attempt tracking and unknown-outcome recovery. A fixed-endpoint HTTP transport is available but disabled by default. Live OAuth and background scheduling are not provisioned. Next inputs: tenant/application setup, calendar ID and recipient confirmation. Current UI accepts local synthetic destinations only for preview; no live connection made. Read docs/MICROSOFT-REMINDERS.md before enabling delivery.

@@ -33,6 +33,8 @@ def connect(path):
     migrate(db)
     from complied.access import migrate as migrate_access
     migrate_access(db)
+    from complied.reminders import migrate as migrate_reminders
+    migrate_reminders(db)
     return db
 
 def add_obligation(db, *, id, title, jurisdiction, owner, status="unresolved",

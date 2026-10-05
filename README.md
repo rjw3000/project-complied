@@ -76,3 +76,7 @@ PYTHONPATH=src python3 -m complied.access disable-user --user delegate-demo
 ```
 
 [Authentication details](docs/AUTHENTICATED-EDITING.md). These are synthetic local accounts; production Entra integration remains pending.
+
+## Microsoft reminders
+
+Sign in, open **Microsoft reminders**, configure destinations as owner and queue previews for verified current tasks. Email scheduling and calendar payloads are persisted with deduplication and attempt history. [Setup and behavior](docs/MICROSOFT-REMINDERS.md). Microsoft transport is disabled by default. Preview commands never send; explicit operator execution requires separately provisioned delegated authorization. OAuth and automatic scheduling remain pending.
