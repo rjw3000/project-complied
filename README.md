@@ -48,3 +48,14 @@ python3 -m unittest discover -s tests -v
 ```
 
 Local database is var/demo.sqlite3 (excluded from Git). Seed is repeatable. [ADR 001](docs/decisions/001-local-prototype.md) records the prototype-only stack decision. No authenticated editing, notification delivery, PostalMate import or filing/payment execution exists yet.
+
+## Generate synthetic recurring deadlines
+
+After seeding the demo database:
+
+```sh
+PYTHONPATH=src python3 -m complied.recurrence
+PYTHONPATH=src python3 -m complied.deadlines list --today 2026-10-05
+```
+
+This adds three monthly demo periods and is safe to repeat. The dashboard shows them on refresh. No actual statutory dates are configured. [Schedule contract](docs/RECURRENCE.md) describes monthly, quarterly and annual periods, explicit short-month/holiday policies and conflict handling.

@@ -1,7 +1,7 @@
 # Project Complied — Project Record
 
 Version: 0.4 | Updated: 5 October 2026 | Owner: RJ Williams
-Status: Internal pilot planning; repository foundation implemented
+Status: Internal pilot; synthetic local deadline prototype and recurrence under development
 
 ## Purpose and authority
 
@@ -96,3 +96,7 @@ Update after each material user answer, decision, implementation milestone, or v
 - 5 October 2026 — v0.3: resolved follow-up business questions; PostalMate primary, owner-only payment initiation, Microsoft 365, federal/state/local discovery, owner development, software/hosting budget allowance proposed.
 
 - 5 October 2026 — v0.4: owner confirms Ivy/Charlottesville City and Pantops/Albemarle County, physical goods taxed, handling immaterial. Specifications and delivery plan aligned; monetary tolerance remains unset.
+
+## Implementation progress — 5 October 2026
+
+PR #8 adds the local SQLite/read-only dashboard prototype; CI, CodeQL and Gitleaks passed at 0d0d1d3. This branch adds immutable reviewed recurrence rules, atomic task generation, explicit calendar policies and migration tests. These are synthetic capabilities, not verified statutory dates. Production identity, notifications and imports remain pending.
