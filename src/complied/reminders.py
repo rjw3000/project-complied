@@ -85,6 +85,16 @@ def enqueue(db,token,task_id,channel,offset_days=7):
         if channel=="calendar":
             offset_days=0 # one event per task/version, not one event per email reminder
         identity=[task_id,row["revision"],row["schedule_revision"],channel,offset_days,settings["version"]]
+        # Preserve pre-v5 IDs and calendar transaction IDs. Semantic identity
+        # is stable even though the key hashing format gained schedule_revision.
+        existing=db.execute("""SELECT id FROM reminder_outbox WHERE task_id=? AND obligation_revision=?
+            AND schedule_revision=? AND channel=? AND offset_days=? AND settings_version=?""",
+            (task_id,row["revision"],row["schedule_revision"],channel,offset_days,settings["version"])).fetchall()
+        if len(existing)>1:
+            raise ValueError("Duplicate legacy reminders require reconciliation")
+        if existing:
+            db.commit()
+            return existing[0]["id"]
         key=hashlib.sha256(json.dumps(identity).encode()).hexdigest()
         due=date.fromisoformat(row["due_date"])
         send_on=due-timedelta(days=offset_days)
@@ -125,6 +135,13 @@ def dispatch_one(db,transport,now=None):
         if row is None:
             db.commit()
             return None
+        duplicates=db.execute("""SELECT COUNT(*) FROM reminder_outbox WHERE task_id=? AND obligation_revision=?
+            AND schedule_revision=? AND channel=? AND offset_days=? AND settings_version=?""",
+            (row["task_id"],row["obligation_revision"],row["schedule_revision"],row["channel"],row["offset_days"],row["settings_version"])).fetchone()[0]
+        if duplicates>1:
+            db.execute("UPDATE reminder_outbox SET status='unknown',error='Duplicate identity requires reconciliation' WHERE id=?",(row["id"],))
+            db.commit()
+            return "unknown"
         current=task(db,row["task_id"])
         settings=db.execute("SELECT version FROM reminder_settings WHERE singleton=1").fetchone()
         if not valid(current) or current["revision"]!=row["obligation_revision"] or current["schedule_revision"]!=row["schedule_revision"] or not settings or settings["version"]!=row["settings_version"]:

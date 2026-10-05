@@ -109,3 +109,28 @@ class ReminderTests(unittest.TestCase):
         for value in ["!"*10000,"missing-at","@example.invalid","demo@.invalid","demo@example.","demo @example.invalid"]:
             with self.assertRaises(ValueError):
                 configure(self.db,self.token,value,"calendar")
+
+    def test_pre_v5_identity_preserved_for_unknown_reminder(self):
+        import hashlib
+        key=enqueue(self.db,self.token,self.task_id,"email",7)
+        row=self.db.execute("SELECT * FROM reminder_outbox WHERE id=?",(key,)).fetchone()
+        legacy=hashlib.sha256(json.dumps([self.task_id,row["obligation_revision"],"email",7,row["settings_version"]]).encode()).hexdigest()
+        with self.db:
+            self.db.execute("UPDATE reminder_outbox SET id=?,status='unknown' WHERE id=?",(legacy,key))
+        self.assertEqual(enqueue(self.db,self.token,self.task_id,"email",7),legacy)
+        self.assertEqual(len(list_outbox(self.db)),1)
+        transport=Transport(("accepted",None))
+        self.assertIsNone(dispatch_one(self.db,transport,now=self.now))
+        self.assertEqual(transport.calls,0)
+    def test_existing_duplicate_identity_never_dispatches(self):
+        key=enqueue(self.db,self.token,self.task_id,"email",7)
+        with self.db:
+            self.db.execute("""INSERT INTO reminder_outbox
+                (id,task_id,obligation_revision,channel,offset_days,scheduled_at,settings_version,payload,status,attempts,provider_id,error,schedule_revision)
+                SELECT 'duplicate',task_id,obligation_revision,channel,offset_days,scheduled_at,settings_version,payload,'queued',0,NULL,'',schedule_revision
+                FROM reminder_outbox WHERE id=?""",(key,))
+            self.db.execute("UPDATE reminder_outbox SET status='unknown' WHERE id=?",(key,))
+        with self.assertRaises(ValueError): enqueue(self.db,self.token,self.task_id,"email",7)
+        transport=Transport(("accepted",None))
+        self.assertEqual(dispatch_one(self.db,transport,now=self.now),"unknown")
+        self.assertEqual(transport.calls,0)

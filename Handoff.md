@@ -42,3 +42,5 @@ python3 -m unittest discover -s tests -v
 ```
 
 Use branches/PRs and validate the exact head with required checks. User has authorized PR creation and merge when green in this session; address review findings first. No bot auto-approval or auto-merge. No live secrets or business records in Git/CI. Maintain Project.md and this handoff with each milestone.
+
+Reminder compatibility fix: enqueue recognizes pre-v5 semantic identities and preserves original IDs; existing duplicate identities block dispatch for reconciliation, including unknown outcomes. Never regenerate a key to bypass uncertain prior delivery.
