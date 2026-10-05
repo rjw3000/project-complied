@@ -44,30 +44,8 @@ th{{background:#e9eff7}}td{{vertical-align:top}}footer{{margin-top:24px;color:#5
 <footer>Missing facts stay visible. PostalMate preparation and authenticated review are next milestones.</footer></main></html>"""
 
 def handler_for(db_path):
-    class Handler(BaseHTTPRequestHandler):
-        def do_GET(self):
-            if self.headers.get("Host") not in {f"127.0.0.1:{self.server.server_port}",
-                                                f"localhost:{self.server.server_port}"}:
-                self.send_error(403)
-                return
-            if urlsplit(self.path).path != "/":
-                self.send_error(404)
-                return
-            today = datetime.now(ZoneInfo("America/New_York")).date()
-            db = connect(db_path)
-            try:
-                content = render(dashboard(db,today),today).encode()
-            finally:
-                db.close()
-            self.send_response(200)
-            self.send_header("Content-Type","text/html; charset=utf-8")
-            self.send_header("Content-Length",str(len(content)))
-            self.send_header("Cache-Control","no-store")
-            self.send_header("X-Content-Type-Options","nosniff")
-            self.send_header("Content-Security-Policy","default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'")
-            self.end_headers()
-            self.wfile.write(content)
-    return Handler
+    from complied.editor import handler_for as authenticated_handler
+    return authenticated_handler(db_path)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

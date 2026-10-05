@@ -102,13 +102,13 @@ def register_rule(db, obligation_id, definition, *, source, reviewer, reviewed_o
     obligation = db.execute("SELECT * FROM obligations WHERE id=?",(obligation_id,)).fetchone()
     if obligation is None or obligation["status"] != "applicable" or not obligation["reviewed"]:
         raise ValueError("Obligation must be applicable and reviewed")
-    content = dict(obligation_id=obligation_id,definition=definition,source=source,
+    content = dict(obligation_id=obligation_id,obligation_revision=obligation['revision'],definition=definition,source=source,
                    reviewer=reviewer,reviewed_on=reviewed_on)
     canonical = json.dumps(content,sort_keys=True,separators=(",",":"))
     rule_id = hashlib.sha256(canonical.encode()).hexdigest()
     with db:
-        db.execute("INSERT OR IGNORE INTO deadline_rules VALUES(?,?,?,?,?,?)",
-                   (rule_id,obligation_id,json.dumps(definition,sort_keys=True),source,reviewer,reviewed_on))
+        db.execute("INSERT OR IGNORE INTO deadline_rules(id,obligation_id,definition,source,reviewer,reviewed_on,obligation_revision) VALUES(?,?,?,?,?,?,?)",
+                   (rule_id,obligation_id,json.dumps(definition,sort_keys=True),source,reviewer,reviewed_on,obligation['revision']))
     return rule_id
 
 def generate(db, rule_id, first_period, count):
@@ -124,7 +124,7 @@ def generate(db, rule_id, first_period, count):
         if rule is None:
             raise ValueError("Unknown rule")
         obligation = db.execute("SELECT * FROM obligations WHERE id=?",(rule["obligation_id"],)).fetchone()
-        if obligation["status"] != "applicable" or not obligation["reviewed"]:
+        if obligation["status"] != "applicable" or not obligation["reviewed"] or obligation["revision"] != rule["obligation_revision"]:
             raise ValueError("Obligation review is no longer valid")
         definition = json.loads(rule["definition"])
         ids = []
@@ -139,8 +139,8 @@ def generate(db, rule_id, first_period, count):
                     raise ValueError("Existing task conflicts with rule; explicit reconciliation required")
                 ids.append(existing["id"])
                 continue
-            task_id = db.execute("INSERT INTO tasks(obligation_id,period,due_date) VALUES(?,?,?)",
-                                 (rule["obligation_id"],period,due)).lastrowid
+            task_id = db.execute("INSERT INTO tasks(obligation_id,period,due_date,obligation_revision) VALUES(?,?,?,?)",
+                                 (rule["obligation_id"],period,due,obligation["revision"])).lastrowid
             db.execute("INSERT INTO task_rules VALUES(?,?)",(task_id,rule_id))
             ids.append(task_id)
         db.commit()

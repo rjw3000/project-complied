@@ -98,7 +98,7 @@ class RecurrenceTests(unittest.TestCase):
             for _ in range(2):
                 new=connect(path)
                 self.assertEqual(new.execute("SELECT COUNT(*) FROM tasks").fetchone()[0],1)
-                self.assertEqual(new.execute("SELECT MAX(version) FROM schema_versions").fetchone()[0],2)
+                self.assertEqual(new.execute("SELECT MAX(version) FROM schema_versions").fetchone()[0],3)
                 new.close()
 
     def test_register_includes_obligations_without_tasks(self):
