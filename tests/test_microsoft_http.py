@@ -77,6 +77,20 @@ class HostedMicrosoftHTTPTests(unittest.TestCase):
             self.assertIn("Dedicated calendar",self.request("GET","/microsoft-calendars",cookies=session)[2])
             self.assertEqual(self.request("POST","/configure-reminders",{"csrf":csrf,"recipient":"owner@example.com","calendar_id":"calendar-1"},cookies=session)[0],303)
             self.assertEqual(self.request("POST","/configure-reminders",{"csrf":csrf,"recipient":"owner@example.com","calendar_id":"unknown"},cookies=session)[0],409)
+        from complied.deadlines import add_obligation,add_task
+        db=connect(self.path)
+        add_obligation(db,id="demo-live",title="Synthetic due",jurisdiction="Demo",
+                       owner="Owner",status="applicable",source="urn:synthetic",reviewed=True)
+        add_task(db,"demo-live","2026-10","2026-11-15")
+        task_id=db.execute("SELECT id FROM tasks WHERE obligation_id='demo-live'").fetchone()[0]
+        db.close()
+        payload={"csrf":csrf,"task_id":str(task_id),"channel":"calendar","offset_days":"0"}
+        self.assertIn("I confirm this reminder",self.request("GET","/reminders",cookies=session)[2])
+        self.assertEqual(self.request("POST","/queue-reminder",payload,cookies=session)[0],409)
+        self.assertEqual(self.request("POST","/queue-reminder",dict(payload,confirm_live="yes"),cookies=session)[0],303)
+        db=connect(self.path)
+        self.assertEqual(db.execute("SELECT status FROM reminder_outbox").fetchone()[0],"queued")
+        db.close()
         self.assertEqual(self.request("POST","/disconnect-microsoft",{"csrf":csrf},cookies=session)[0],303)
         self.assertIn("Connect Microsoft reminders",self.request("GET","/reminders",cookies=session)[2])
     def test_callback_replay_and_host_rejection(self):

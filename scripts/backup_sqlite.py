@@ -12,9 +12,14 @@ def backup(source,target_dir):
         raise ValueError("Use an existing database and separate backup directory")
     name="complied-"+datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S-%f")+".sqlite3"
     target=target_dir/name
-    destination=sqlite3.connect(target)
+    fd=os.open(target,os.O_CREAT|os.O_EXCL|os.O_RDWR,0o600)
+    os.close(fd)
     try:
-        os.chmod(target,0o600)
+        destination=sqlite3.connect(target)
+    except Exception:
+        target.unlink(missing_ok=True)
+        raise
+    try:
         with sqlite3.connect(source.as_uri()+"?mode=ro",uri=True) as origin:
             origin.backup(destination)
         result=destination.execute("PRAGMA integrity_check").fetchone()[0]

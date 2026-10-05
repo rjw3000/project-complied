@@ -37,7 +37,7 @@ def page(title,content,public=False):
             'table{border-collapse:collapse;width:100%;text-align:left}th,td{padding:13px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#eaf0f5;font-size:13px;white-space:nowrap}tr:last-child td{border-bottom:0}'
             'label{display:block;margin:12px 0;color:#344c63;font-weight:600}input,select,textarea{display:block;width:min(100%,680px);font:inherit;padding:10px 12px;border:1px solid #aabccc;border-radius:7px;background:white;color:var(--ink)}'
             'input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid #54a9db;outline-offset:2px}'
-            'input[type=hidden]{display:none}textarea{min-height:95px}button{font:inherit;font-weight:650;background:var(--blue);color:white;padding:10px 17px;border:0;border-radius:7px;cursor:pointer}'
+            'input[type=hidden]{display:none}input[type=checkbox]{display:inline;width:auto;margin-right:9px}textarea{min-height:95px}button{font:inherit;font-weight:650;background:var(--blue);color:white;padding:10px 17px;border:0;border-radius:7px;cursor:pointer}'
             'button:hover{background:#0e395f}.button-link{display:inline-block;background:#174c7e;color:white;text-decoration:none;padding:10px 17px;border-radius:7px;font-weight:650}'
             '.steps{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0;margin:24px 0}.steps li{padding:12px;background:#e6edf2;border-radius:10px;color:#385269;font-weight:650}.steps .current{background:#174c7e;color:white}'
             '.action-card{background:#e7f5f1;border:1px solid #9dd0bf;border-radius:14px;padding:23px;margin:22px 0}.badge{font-size:12px;font-weight:700;display:inline-block;padding:3px 9px;border-radius:99px;background:#e6eef4;color:#174c7e;vertical-align:middle}'
@@ -112,7 +112,12 @@ def reminders_page(db,user):
                 content+='<option value="'+str(row["id"])+'">'+escape(record["title"]+' · '+record["period"])+'</option>'
         content+='</select></label><label>Channel<select name="channel"><option value="email">Email</option><option value="calendar">Calendar event</option></select></label>'
         content+=field("offset_days","Days before deadline (email)",7,kind="number")
-        content+='<button>Queue for preview</button></form>'
+        if live:
+            content+='<p class="notice">This queues a real Microsoft request. Calendar events may send immediately while the live worker runs; email is scheduled for the chosen date. If the worker is currently disabled, queued work becomes eligible when it is enabled.</p>'
+            content+='<label><input type="checkbox" name="confirm_live" value="yes" required> I confirm this reminder may be delivered to Microsoft 365</label>'
+            content+='<button>Queue for delivery</button></form>'
+        else:
+            content+='<button>Queue for preview</button></form>'
     content+='<h2>Reminder history</h2>'
     for row in list_outbox(db):
         content+='<form><strong>'+escape(row["channel"]+' · '+row["status"])+'</strong>'
@@ -512,6 +517,8 @@ def handler_for(db_path):
                     self.redirect("/reminders")
                 elif path=="/queue-reminder":
                     from complied.reminders import enqueue
+                    if public_origin and fields.get("confirm_live")!="yes":
+                        raise ValueError("Confirm Microsoft delivery")
                     enqueue(db,token,int(fields["task_id"]),fields["channel"],int(fields["offset_days"]))
                     self.redirect("/reminders")
                 else:
