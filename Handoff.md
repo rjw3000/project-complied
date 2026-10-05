@@ -50,3 +50,7 @@ Reminder compatibility fix: enqueue recognizes pre-v5 semantic identities and pr
 PR #13 merged green at 7cf91b1. This increment adds schema v7, authenticated source decisions, append-only review history and JSON exports. Review context includes all known monthly source versions; corrections invalidate earlier review until explicit revalidation. Tax-return blockers stay visible and return_ready is always false. Follow docs/PACKAGE-REVIEW.md. Next: verified actual report mapping and return rules after sample inputs; runtime production identity and live Microsoft OAuth still pending.
 
 Source-write hardening: every application connection enables recursive SQLite triggers so REPLACE cannot bypass append-only/immutable guards. Imports and preparation acquire an immediate write transaction and reauthorize after locking; revoked sessions cannot finish a delayed write.
+
+## Browser workflow increment (5 October 2026)
+
+A responsive common UI shell and authenticated two-store CSV upload flow are under development. Browser uploads accept only the documented normalized monthly CSV contract, with per-file 64 KiB and total 150 KiB limits. The pair import is atomic, idempotent and source-hashed; a failed report leaves no new source snapshots or package. Actual PostalMate export mapping is still an input. Microsoft tenant registration, consent, selected calendar/recipient, token refresh and production hosting credentials are not yet provisioned.

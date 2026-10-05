@@ -119,6 +119,37 @@ def prepare(db,token,snapshot_ids):
         db.rollback()
         raise
 
+
+def import_pair(db,token,ivy_raw,pantops_raw):
+    """Atomically import both normalized CSVs and prepare one source package."""
+    authorize(db,token,"review")
+    rows=[parse(ivy_raw),parse(pantops_raw)]
+    if [row["store_id"] for row in rows]!=["ivy","pantops"] or rows[0]["period"]!=rows[1]["period"]:
+        raise ValueError("Upload Ivy and Pantops reports for the same month")
+    db.execute("BEGIN IMMEDIATE")
+    try:
+        user=authorize(db,token,"review")
+        ids=[]
+        for raw,row in zip((ivy_raw,pantops_raw),rows):
+            key=hashlib.sha256(raw).hexdigest()
+            cursor=db.execute("INSERT OR IGNORE INTO sales_snapshots VALUES(?,?,?,?,?,?)",
+                              (key,row["store_id"],row["period"],FORMAT,raw,json.dumps(row,sort_keys=True)))
+            if cursor.rowcount:
+                audit(db,user,"import-sales",key,{"store":row["store_id"],"period":row["period"],"format":FORMAT})
+            ids.append(key)
+        manifest=assemble(db,ids)
+        serialized=json.dumps(manifest,sort_keys=True,separators=(",",":"))
+        key=hashlib.sha256(serialized.encode()).hexdigest()
+        cursor=db.execute("INSERT OR IGNORE INTO preparation_packages VALUES(?,?,?,?)",
+                          (key,manifest["period"],serialized,user["id"]))
+        if cursor.rowcount:
+            audit(db,user,"prepare-sales",key,{"period":manifest["period"],"snapshots":sorted(ids)})
+        db.commit()
+        return key,manifest
+    except Exception:
+        db.rollback()
+        raise
+
 def main():
     import getpass
     from complied.access import login,logout
