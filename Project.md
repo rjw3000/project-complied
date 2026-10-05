@@ -1,6 +1,6 @@
 # Project Complied — Project Record
 
-Version: 0.2 | Updated: 3 October 2026 | Owner: RJ Williams
+Version: 0.3 | Updated: 5 October 2026 | Owner: RJ Williams
 Status: Internal pilot planning; repository foundation implemented
 
 ## Purpose and authority
@@ -15,22 +15,22 @@ This is the living business-scope and decision record. [Handoff.md](Handoff.md) 
 |---|---|
 | Entity and coverage | Whitewater Package Depot LLC; both stores |
 | Intended audience | Internal tool for now |
-| Accounting | One QuickBooks Online company; stores are not currently differentiated |
-| Point of sale | PostalMate; no interaction with QuickBooks Online |
+| Accounting | One QuickBooks Online company; bank-feed bookkeeping; stores are not currently differentiated. PostalMate is the sales-tax source |
+| Point of sale | PostalMate; separate database per store; monthly store/category/tax/refund/nontaxable reports can be exported |
 | Current operator | RJ prepares, reviews, files, and pays |
 | Filing structure | Stores file combined under one legal entity, per owner |
 | Virginia portal | Access/setup not yet completed; RJ plans to arrange it |
 | Historical example | Not available now; owner can perform a test |
 | Documents | One sales-tax filing folder in Dropbox, organized by date |
-| Known complexity | Sales that are not considered taxable; categories and legal treatment unverified |
+| Known complexity | Owner currently treats third-party shipping cost and packing services as nontaxable; legal treatment remains unverified |
 | Reviewer | Owner initially; professional reviewer may be available later |
-| Approval authority | Business owner or a delegate; filing and payment separately approved |
+| Approval authority | Owner-authorized delegate may perform all duties except initiate payments. Filing and payment remain separate approvals; owner alone initiates payment |
 | Notifications | Email and a tax calendar in Outlook or Google |
-| Identity/calendar ecosystem | Microsoft currently; eventual Google support desired |
+| Identity/calendar ecosystem | Microsoft 365 business; Microsoft-first, eventual Google support desired |
 | Retention | Seven years, as an owner requirement; legal sufficiency and retention trigger still to be reviewed |
 | Initial filing route | Manual filing acceptable; automation desired eventually |
 | Operating capacity | Owner will implement/operate; 40 hours per month |
-| Budget | Recommended dollar budget requested; not yet determined or approved |
+| Budget | Software and hosting only; no paid development help. Proposed planning allowance: $100/month with a $150/month cap, excluding existing subscriptions; not an approved spend or vendor quote |
 | Development tools | Has not used Claude Code or Grokbot; open to either; framework not selected |
 | Pilot cycle | October 2026 sales, with intended submission in November 2026; actual due date unverified |
 
@@ -38,7 +38,7 @@ This is the living business-scope and decision record. [Handoff.md](Handoff.md) 
 
 Success means identifying applicable statutory requirements, tracking deadlines through email/calendar, and preparing an accurate return ready for submission from reliable source data. Initial proposed acceptance: reconcile a complete monthly package, obtain owner approval, and retain filing receipt; exact tolerances and notification timing remain open.
 
-Scope includes statutory filings, taxes, fees, licenses, registrations, payroll-related filings, entity annual reports, and other applicable obligations. Insurance renewals are also desired calendar items; distinguish contractual/operational renewals from statutory duties. Federal/state/local discovery is proposed pending location and activity facts.
+Scope includes statutory filings, taxes, fees, licenses, registrations, payroll-related filings, entity annual reports, and other applicable obligations. Insurance renewals are also desired calendar items; distinguish contractual/operational renewals from statutory duties. Federal/state/local discovery is confirmed. Employees and leased premises are confirmed; no online or out-of-state sales reported. Equipment/vehicle ownership remains unanswered.
 
 Each discovered obligation should carry authority/source, effective date, applicability rationale, jurisdiction, required business facts, owner, recurrence, due-date rule, evidence requirements, and review status. Missing facts produce an explicit “applicability unresolved” state. Do not claim comprehensive coverage before discovery and review are complete.
 
@@ -46,9 +46,25 @@ Each discovered obligation should carry authority/source, effective date, applic
 
 Recommended approach, not a final stack decision: preparation-first hybrid internal app. Build calendar and obligation register first; use exports and manual submission initially; progressively add connectors, filing, and payment. Track both stores as business locations even if accounting imports begin combined. Whether location-specific tax allocation is necessary remains unresolved.
 
-PostalMate → bookkeeping → tax preparation is a critical dependency. QuickBooks cannot be assumed to contain taxable/nontaxable sales detail or the full gross-sales ledger. Confirm the source and reconciliation path before implementing calculations.
+PostalMate exports → per-store validation → reviewed tax mapping → combined entity package is the preparation path. QBO bank feeds support accounting reconciliation only and cannot establish taxable sales. Preserve store detail even when the final filing is combined; local jurisdiction and location reporting require verification.
 
 Use deterministic, versioned calculations with reviewed rules. AI may assist discovery, extraction, explanation, and exception triage; it does not establish statutory applicability or filing correctness by itself.
+
+
+## Follow-up facts confirmed 5 October 2026
+
+- Two Virginia stores; owner supplied exact addresses in conversation. Keep them outside this public repository; verify city versus county jurisdiction from official records, not the postal city label.
+- Activities: shipping, packing, merchandise, mailbox rental, printing, and freight; no notary. Exact invoice categories and bundled charges await sample reports/receipts.
+- Known duties: annual state company filings, monthly sales tax, and annual county/city business licenses. These owner-reported duties are a discovery seed, not a verified complete statutory catalog.
+- Monthly sales-tax deadlines have been missed; prioritize reminders and overdue visibility.
+- Synthetic/redacted exports can be supplied. Actual business records require a secure route outside GitHub.
+
+Virginia shipping/handling validation sources (reviewed 5 October 2026):
+https://law.lis.virginia.gov/admincode/title23/agency10/chapter210/section6000/
+and https://www.tax.virginia.gov/laws-rules-decisions/rulings-tax-commissioner/15-115
+Separately stated transportation may be excluded; handling and bundled charges require separate analysis. Do not encode a blanket packing exemption.
+
+Budget allowance is a project planning choice, not researched product pricing: target $100/month, maximum $150/month pending owner approval, covering incremental hosting, database/backups, notification delivery, and development tools. Existing Microsoft/QBO/PostalMate/Dropbox costs are excluded until identified. Prefer reuse of existing subscriptions. Establish current vendor quotes before selecting or purchasing services.
 
 ## Current implementation and protections
 
@@ -75,3 +91,5 @@ Update after each material user answer, decision, implementation milestone, or v
 ## Change log
 
 - 3 October 2026 — v0.2: captured 22 owner answers; internal scope, both stores, PostalMate gap, deadline priority, delegated approvals, seven-year retention, 40 hours/month, and intended October/November pilot. Stack, budget, dates, and tax applicability remain open.
+
+- 5 October 2026 — v0.3: resolved follow-up business questions; PostalMate primary, owner-only payment initiation, Microsoft 365, federal/state/local discovery, owner development, software/hosting budget allowance proposed.
