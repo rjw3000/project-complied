@@ -100,3 +100,13 @@ class RecurrenceTests(unittest.TestCase):
                 self.assertEqual(new.execute("SELECT COUNT(*) FROM tasks").fetchone()[0],1)
                 self.assertEqual(new.execute("SELECT MAX(version) FROM schema_versions").fetchone()[0],2)
                 new.close()
+
+    def test_register_includes_obligations_without_tasks(self):
+        add_obligation(self.db,id="unresolved",title="Discovery",jurisdiction="Demo",owner="Demo")
+        add_obligation(self.db,id="excluded",title="Excluded",jurisdiction="Demo",owner="Demo",
+                       status="not_applicable",rationale="Owner review")
+        rows=dashboard(self.db,date(2026,10,5))
+        states={r["obligation_id"]:r["state"] for r in rows}
+        self.assertEqual(states,{"d":"unresolved","unresolved":"unresolved","excluded":"not_applicable"})
+        self.assertTrue(all(r["id"] is None for r in rows))
+        self.assertTrue(all(r["period"]=="No period" for r in rows))

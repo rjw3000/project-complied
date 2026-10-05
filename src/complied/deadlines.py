@@ -72,15 +72,18 @@ def complete_task(db, task_id, completed_on):
 
 def dashboard(db, today):
     """Unknown applicability takes precedence over nominal task dates."""
-    rows = db.execute("""SELECT t.*,o.title,o.jurisdiction,o.owner,o.status AS applicability,
-                         o.source,o.rationale,o.reviewed,tr.rule_id FROM tasks t
-                         JOIN obligations o ON o.id=t.obligation_id
+    rows = db.execute("""SELECT t.id,o.id AS obligation_id,COALESCE(t.period,'No period') AS period,
+                         t.due_date,t.completed_on,o.title,o.jurisdiction,o.owner,o.status AS applicability,
+                         o.source,o.rationale,o.reviewed,tr.rule_id FROM obligations o
+                         LEFT JOIN tasks t ON o.id=t.obligation_id
                          LEFT JOIN task_rules tr ON tr.task_id=t.id
                          ORDER BY t.due_date IS NULL,t.due_date,t.id""").fetchall()
     result = []
     for row in rows:
         item = dict(row)
-        if item["applicability"] != "applicable" or not item["reviewed"] or not item["due_date"]:
+        if item["applicability"] == "not_applicable":
+            state = "not_applicable"
+        elif item["applicability"] != "applicable" or not item["reviewed"] or not item["due_date"]:
             state = "unresolved"
         elif item["completed_on"]:
             state = "completed"

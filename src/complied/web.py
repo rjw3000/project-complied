@@ -13,7 +13,7 @@ def render(rows, today):
     cards = "".join(f'<div class="card"><strong>{counts[state]}</strong><span>{label}</span></div>'
                     for state,label in [("overdue","Overdue"),("due_today","Due today"),
                                         ("upcoming","Upcoming"),("unresolved","Needs verification"),
-                                        ("completed","Completed")])
+                                        ("completed","Completed"),("not_applicable","Not applicable")])
     body = ""
     for row in rows:
         values = [row["title"], row["jurisdiction"], row["period"],
