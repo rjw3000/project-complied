@@ -59,18 +59,23 @@ def parse(raw):
     return row
 
 def import_snapshot(db,token,raw):
-    user=authorize(db,token,"edit")
+    authorize(db,token,"edit")
     row=parse(raw)
     key=hashlib.sha256(raw).hexdigest()
-    with db:
+    db.execute("BEGIN IMMEDIATE")
+    try:
+        user=authorize(db,token,"edit")
         cursor=db.execute("INSERT OR IGNORE INTO sales_snapshots VALUES(?,?,?,?,?,?)",
                          (key,row["store_id"],row["period"],FORMAT,raw,json.dumps(row,sort_keys=True)))
         if cursor.rowcount:
             audit(db,user,"import-sales",key,{"store":row["store_id"],"period":row["period"],"format":FORMAT})
-    return key
+        db.commit()
+        return key
+    except Exception:
+        db.rollback()
+        raise
 
-def prepare(db,token,snapshot_ids):
-    user=authorize(db,token,"review")
+def assemble(db,snapshot_ids):
     if len(snapshot_ids)!=2 or len(set(snapshot_ids))!=2:
         raise ValueError("Select two distinct source snapshots")
     snapshots=[]
@@ -94,14 +99,25 @@ def prepare(db,token,snapshot_ids):
                   sources=[dict(snapshot_id=key,**row) for key,row in snapshots],totals=totals,
                   limitations=["Synthetic normalized contract; actual PostalMate mapping unverified",
                                "No rates, exemptions, return lines or remittance amount calculated"])
-    serialized=json.dumps(manifest,sort_keys=True,separators=(",",":"))
-    key=hashlib.sha256(serialized.encode()).hexdigest()
-    with db:
+    return manifest
+
+def prepare(db,token,snapshot_ids):
+    authorize(db,token,"review")
+    db.execute("BEGIN IMMEDIATE")
+    try:
+        user=authorize(db,token,"review")
+        manifest=assemble(db,snapshot_ids)
+        serialized=json.dumps(manifest,sort_keys=True,separators=(",",":"))
+        key=hashlib.sha256(serialized.encode()).hexdigest()
         cursor=db.execute("INSERT OR IGNORE INTO preparation_packages VALUES(?,?,?,?)",
                          (key,manifest["period"],serialized,user["id"]))
         if cursor.rowcount:
             audit(db,user,"prepare-sales",key,{"period":manifest["period"],"snapshots":sorted(snapshot_ids)})
-    return key,manifest
+        db.commit()
+        return key,manifest
+    except Exception:
+        db.rollback()
+        raise
 
 def main():
     import getpass

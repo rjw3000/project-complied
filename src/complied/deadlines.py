@@ -26,6 +26,7 @@ def connect(path):
     db = sqlite3.connect(path)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA foreign_keys=ON")
+    db.execute("PRAGMA recursive_triggers=ON")
     with db:
         db.executescript(SCHEMA)
         db.execute("INSERT OR IGNORE INTO schema_versions VALUES(1)")
@@ -39,6 +40,8 @@ def connect(path):
     migrate_schedules(db)
     from complied.imports import migrate as migrate_imports
     migrate_imports(db)
+    from complied.package_review import migrate as migrate_package_review
+    migrate_package_review(db)
     return db
 
 def add_obligation(db, *, id, title, jurisdiction, owner, status="unresolved",

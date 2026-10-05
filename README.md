@@ -92,3 +92,7 @@ PYTHONPATH=src python3 -m complied.imports --user owner-demo fixtures/synthetic/
 ```
 
 Then sign in and open **Sales preparation** to review both store totals and source hashes. [Import contract](docs/SALES-IMPORTS.md). Actual PostalMate columns and tax-return calculations remain pending; packages are explicitly not return-ready.
+
+## Review monthly source evidence
+
+Open **Sales preparation → Review source package** to record source review, request information or reject a package. Download a signed-in JSON source packet with hashes, totals, review history and blockers. Source reviews become stale when another version for the month is imported. [Package review details](docs/PACKAGE-REVIEW.md). Reviewing sources does not approve a tax return or payment.

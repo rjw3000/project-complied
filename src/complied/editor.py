@@ -121,12 +121,42 @@ def preparation_page(db):
     for row in db.execute("SELECT * FROM preparation_packages ORDER BY period DESC,id"):
         manifest=json.loads(row["manifest"])
         content+='<form><h2>'+escape(manifest["period"])+'</h2><p>Package '+escape(row["id"])+'</p>'
-        content+='<p>Status: source reconciled; return preparation pending.</p><table><tr><th>Store</th><th>Taxable net sales</th><th>Nontaxable net sales</th><th>Tax collected</th></tr>'
+        content+='<p><a href="/package?id='+escape(row["id"],quote=True)+'">Review source package</a></p><p>Status: source reconciled; return preparation pending.</p><table><tr><th>Store</th><th>Taxable net sales</th><th>Nontaxable net sales</th><th>Tax collected</th></tr>'
         for source in manifest["sources"]:
             content+='<tr>'+''.join('<td>'+escape(str(source[key]))+'</td>' for key in ["store_id","net_taxable_sales","net_nontaxable_sales","tax_collected"])+'</tr>'
         content+='</table><p>Combined net sales: '+escape(manifest["totals"]["net_sales_control"])+' · Tax collected: '+escape(manifest["totals"]["tax_collected"])+'</p>'
         content+='<details><summary>Source hashes and contract</summary><pre style="white-space:pre-wrap">'+escape(json.dumps(manifest,indent=2))+'</pre></details></form>'
     return page("Monthly sales preparation",content)
+
+
+def package_page(db,user,package_id):
+    from complied.package_review import summary,context
+    data=summary(db,package_id)
+    context_hash,_=context(db,data["manifest"])
+    content='<p><a href="/preparation">Sales preparation</a></p>'
+    content+='<p>Package '+escape(package_id)+' · Period '+escape(data["manifest"]["period"])+'</p>'
+    content+='<p>Source-review status: '+escape(data["review_state"])+' · Not return-ready.</p>'
+    content+='<h2>Open blockers</h2><ul>'+''.join('<li>'+escape(blocker)+'</li>' for blocker in data["blockers"])+'</ul>'
+    content+='<p>Review each selected source hash and consider other known versions for this month.</p><pre style="white-space:pre-wrap">'+escape(__import__("json").dumps(data["manifest"],indent=2))+'</pre>'
+    content+='<p>Known source versions: '+escape(", ".join(data["source_versions"]))+'</p>'
+    content+='<form method="post" action="/package-review">'
+    content+=hidden("csrf",user["csrf"])+hidden("package_id",package_id)+hidden("revision",data["review_revision"])+hidden("context",context_hash)
+    content+='<label>Source decision<select name="decision"><option value="sources_reviewed">Source totals reviewed</option><option value="needs_information">Needs information</option><option value="rejected">Reject source package</option></select></label>'
+    content+='<label>Review notes<textarea name="notes" required maxlength="4000"></textarea></label><button>Record source review</button></form>'
+    content+='<p>This decision does not approve government submission or payment.</p><a href="/package-export?id='+package_id+'">Download source review packet</a>'
+    content+='<h2>Review history</h2>'
+    for review in data["reviews"]:
+        content+='<p>'+escape(review["actor"]+' · '+review["decision"]+' · '+review["notes"])+'</p>'
+    return page("Monthly package review",content)
+
+def package_query(path):
+    query=parse_qs(urlsplit(path).query,max_num_fields=2)
+    if set(query)!={"id"} or len(query["id"])!=1:
+        raise ValueError("One package ID required")
+    package_id=query["id"][0]
+    if len(package_id)!=64 or any(c not in "0123456789abcdef" for c in package_id):
+        raise ValueError("Invalid package ID")
+    return package_id
 
 def handler_for(db_path):
     class Handler(BaseHTTPRequestHandler):
@@ -141,10 +171,11 @@ def handler_for(db_path):
                 return cookies["complied_session"].value if "complied_session" in cookies else ""
             except Exception:
                 return ""
-        def respond(self,status,content,cookie=None):
+        def respond(self,status,content,cookie=None,content_type="text/html; charset=utf-8",download=False):
             payload=content.encode()
             self.send_response(status)
-            self.send_header("Content-Type","text/html; charset=utf-8")
+            self.send_header("Content-Type",content_type)
+            if download: self.send_header("Content-Disposition",'attachment; filename="complied-source-review.json"')
             self.send_header("Content-Length",str(len(payload)))
             self.send_header("Cache-Control","no-store")
             self.send_header("X-Content-Type-Options","nosniff")
@@ -168,13 +199,21 @@ def handler_for(db_path):
                 form='<form method="post" action="/login">'+field("user","User")+field("password","Password",kind="password")+'<button>Sign in</button></form>'
                 self.respond(200,page("Project Complied sign-in",form))
                 return
-            if path not in ("/","/register","/reminders","/schedules","/preparation"):
+            if path not in ("/","/register","/reminders","/schedules","/preparation","/package","/package-export"):
                 self.send_error(404)
                 return
             db=connect(db_path)
             try:
                 user=authenticate(db,self.token())
-                if path=="/preparation":
+                if path=="/package-export":
+                    from complied.package_review import export_package
+                    package_id=package_query(self.path)
+                    self.respond(200,export_package(db,self.token(),package_id),content_type="application/json; charset=utf-8",
+                                 download=True)
+                    return
+                elif path=="/package":
+                    content=package_page(db,user,package_query(self.path))
+                elif path=="/preparation":
                     content=preparation_page(db)
                 elif path=="/schedules":
                     content=schedules_page(db,user)
@@ -189,6 +228,8 @@ def handler_for(db_path):
                 self.respond(200,content)
             except PermissionError:
                 self.redirect("/login")
+            except (ValueError,KeyError):
+                self.send_error(404)
             finally:
                 db.close()
         def do_POST(self):
@@ -196,7 +237,7 @@ def handler_for(db_path):
                 self.send_error(403)
                 return
             path=urlsplit(self.path).path
-            if path not in ("/login","/logout","/create","/edit","/review","/configure-reminders","/queue-reminder","/schedule-preview","/schedule-confirm"):
+            if path not in ("/login","/logout","/create","/edit","/review","/configure-reminders","/queue-reminder","/schedule-preview","/schedule-confirm","/package-review"):
                 self.send_error(404)
                 return
             try:
@@ -224,6 +265,10 @@ def handler_for(db_path):
                 if path=="/logout":
                     logout(db,token)
                     self.redirect("/login","complied_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0")
+                elif path=="/package-review":
+                    from complied.package_review import record_review
+                    record_review(db,token,fields["package_id"],int(fields["revision"]),fields["decision"],fields["notes"],fields["context"])
+                    self.redirect("/preparation")
                 elif path=="/schedule-preview":
                     from complied.schedules import propose
                     definition={key:fields[key] for key in ("anchor","effective_start","effective_end","short_month","roll")}

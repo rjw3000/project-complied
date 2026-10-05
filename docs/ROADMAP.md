@@ -40,3 +40,5 @@ Authenticated editing/review merged green at 48a5a711. M2 increment implements d
 Schedule-review increment: authenticated rule entry and exact-preview confirmation; schema v5 retains before/after audit, blocks completed/uncertain external tasks, cancels queued stale reminders and binds new reminders to schedule revision. Next independent build is synthetic PostalMate import/reconciliation; actual column mapping awaits sample reports.
 
 M3 source increment: normalized synthetic import contract, immutable raw/source snapshots and both-store period validation are implemented. Authenticated UI displays source totals; package status remains not return-ready. Actual report mapping, refund semantics, reviewed classifications and return-line calculations await sample inputs.
+
+M3/M4 source-review increment: authenticated source decisions, stale-context detection and downloadable evidence summaries implemented. This does not complete return-line preparation or filing/payment approval; those depend on reviewed actual reports/rules and verified submission context.

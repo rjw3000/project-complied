@@ -61,3 +61,46 @@ class ImportTests(unittest.TestCase):
         new,_=prepare(self.db,self.token,[revised,pantops])
         self.assertNotEqual(old,new)
         self.assertEqual(self.db.execute("SELECT COUNT(*) FROM preparation_packages").fetchone()[0],2)
+
+    def test_replace_cannot_bypass_immutable_sources_or_packages(self):
+        ivy=import_snapshot(self.db,self.token,raw())
+        pantops=import_snapshot(self.db,self.token,raw("pantops"))
+        package_id,_=prepare(self.db,self.token,[ivy,pantops])
+        self.assertEqual(self.db.execute("PRAGMA recursive_triggers").fetchone()[0],1)
+        for table,id in [("sales_snapshots",ivy),("preparation_packages",package_id)]:
+            with self.assertRaises(sqlite3.IntegrityError):
+                with self.db:
+                    self.db.execute("INSERT OR REPLACE INTO "+table+" SELECT * FROM "+table+" WHERE id=?",(id,))
+            self.assertEqual(self.db.execute("SELECT COUNT(*) FROM "+table+" WHERE id=?",(id,)).fetchone()[0],1)
+    def test_revocation_before_import_lock_denies_write(self):
+        from unittest.mock import patch
+        from complied import imports
+        from complied.access import disable_user
+        original=imports.authorize
+        calls=[]
+        def gate(*args):
+            user=original(*args)
+            if not calls:
+                calls.append(1)
+                disable_user(self.db,"owner")
+            return user
+        with patch.object(imports,"authorize",side_effect=gate):
+            with self.assertRaises(PermissionError):
+                import_snapshot(self.db,self.token,raw())
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM sales_snapshots").fetchone()[0],0)
+    def test_revocation_before_package_lock_denies_write(self):
+        from unittest.mock import patch
+        from complied import imports
+        from complied.access import disable_user
+        ids=[import_snapshot(self.db,self.token,raw()),import_snapshot(self.db,self.token,raw("pantops"))]
+        original=imports.authorize
+        calls=[]
+        def gate(*args):
+            user=original(*args)
+            if not calls:
+                calls.append(1)
+                disable_user(self.db,"owner")
+            return user
+        with patch.object(imports,"authorize",side_effect=gate):
+            with self.assertRaises(PermissionError): prepare(self.db,self.token,ids)
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM preparation_packages").fetchone()[0],0)
