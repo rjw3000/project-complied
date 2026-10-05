@@ -104,3 +104,7 @@ Sign in to see **Monthly sales** and the next action for the most recent package
 ## Microsoft sign-in and deployable host
 
 The local synthetic prototype keeps local accounts on loopback. A separate Microsoft mode supports allowlisted Entra owner/delegate sign-in, owner-only delegated Graph connection, calendar selection and an explicitly enabled reminder worker. A one-host Docker Compose and Caddy configuration, `.env.example`, backup script and setup/recovery steps are in [Deployment](docs/DEPLOYMENT.md). No tenant app, secret, domain or host has been provisioned in this repository; do not load actual records before controlled setup and restoration tests.
+
+## Vercel visual preview
+
+[Open the synthetic owner dashboard preview](https://project-complied.vercel.app/). The Vercel deployment serves a static walk-through of upload → reconcile → review using public sample figures. It does not accept uploads, persist decisions or run Microsoft reminders. See [preview scope](docs/VERCEL-PREVIEW.md) and [hosting requirements for the authenticated application](docs/DEPLOYMENT.md).
