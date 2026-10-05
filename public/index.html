@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Project Complied · Owner dashboard preview</title>
+<style>
+:root{color-scheme:light;--ink:#172b41;--muted:#50657b;--line:#dbe5ed;--bg:#f3f7f9;--blue:#174c7e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,sans-serif}
+a{color:var(--blue);text-underline-offset:3px}.topbar{display:flex;align-items:center;gap:24px;padding:16px max(24px,calc((100vw - 1180px)/2));background:#102b43;color:#fff;flex-wrap:wrap}
+.brand{font-weight:800;letter-spacing:.07em;text-decoration:none;color:white;white-space:nowrap}.brand:first-letter{color:#77d6bc}
+nav{display:flex;gap:18px;flex-wrap:wrap}nav a{color:#e4eef6;text-decoration:none;font-size:14px}nav a:hover,nav a:focus-visible{text-decoration:underline}
+.environment{margin-left:auto;border:1px solid #6591a1;border-radius:99px;padding:3px 11px;color:#c5dfec;font-size:12px}
+main{max-width:1180px;margin:auto;padding:36px 24px 72px}h1{font-size:clamp(28px,4vw,40px);letter-spacing:-.035em;line-height:1.16;margin:0 0 12px}h2{font-size:22px;margin:0 0 10px}h3{margin:0 0 10px}p{margin:10px 0 16px}small,.muted{color:var(--muted)}
+.panel,.card,.table{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 20px rgba(17,47,71,.04)}
+.panel{padding:22px;margin:20px 0}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:24px 0}
+.card{padding:19px}.card strong{display:block;font-size:30px;line-height:1.2}.card span{color:var(--muted);font-size:14px}
+.notice{padding:16px 20px;border:1px solid #e6c987;background:#fff6df;border-radius:12px}.table{overflow:auto}
+table{border-collapse:collapse;width:100%;text-align:left}th,td{padding:13px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#eaf0f5;font-size:13px;white-space:nowrap}tr:last-child td{border-bottom:0}
+a:focus-visible{outline:3px solid #54a9db;outline-offset:2px}
+.button-link{display:inline-block;background:var(--blue);color:white;text-decoration:none;padding:10px 17px;border-radius:7px;font-weight:650}.button-link:hover{background:#0e395f}
+.steps{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0;margin:24px 0}.steps li{padding:12px;background:#e6edf2;border-radius:10px;color:#385269;font-weight:650}.steps .current{background:#174c7e;color:white}
+.action-card{background:#e7f5f1;border:1px solid #9dd0bf;border-radius:14px;padding:23px;margin:22px 0}
+.badge{font-size:12px;font-weight:700;display:inline-block;padding:3px 9px;border-radius:99px;background:#e6eef4;color:#174c7e;vertical-align:middle}
+.checks{list-style:none;padding:0}.checks li{border-bottom:1px solid var(--line);padding:12px 0}.checks li:last-child{border:0}.checks p{color:var(--muted);margin:4px 0}
+input[type=file],textarea,select{display:block;width:min(100%,680px);font:inherit;padding:10px 12px;border:1px solid #aabccc;border-radius:7px;background:#f1f4f6;color:var(--muted)}
+label{display:block;margin:18px 0;color:#344c63;font-weight:600}textarea{min-height:96px}
+[hidden]{display:none!important}.preview-label{color:#6c4d08;font-weight:700}
+@media(max-width:640px){.topbar{gap:12px;padding:16px 20px}.environment{margin-left:0}main{padding:28px 18px 54px}.panel{padding:17px}th,td{padding:10px;font-size:14px}.steps{grid-template-columns:1fr;gap:6px}}
+</style>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="#overview">◆ <span>PROJECT COMPLIED</span></a><nav aria-label="Main navigation"><a href="#overview">Overview</a><a href="#requirements">Requirements</a><a href="#schedules">Schedules</a><a href="#upload">Sales preparation</a><a href="#reminders">Reminders</a></nav><span class="environment">Synthetic visual preview</span></header>
+<main>
+<p class="notice" role="status"><strong>Visual preview · sample data only.</strong> This Vercel page shows the owner workflow from the Python prototype. It does not accept uploads, save reviews, send reminders, file returns or initiate payments. Use the authenticated application on its configured host for those actions.</p>
+
+<section id="overview" class="screen">
+<h1>Compliance calendar</h1><p class="muted">Whitewater Package Depot LLC · Ivy Road and Pantops · illustrative October 2026 package</p>
+<section class="cards" aria-label="Sample status"><div class="card"><strong>4</strong><span>Requirements to verify</span></div><div class="card"><strong>2</strong><span>Store reports in sample</span></div><div class="card"><strong>1</strong><span>Sample month in progress</span></div><div class="card"><strong>0</strong><span>Returns ready to file</span></div></section>
+<section class="action-card"><h2>Monthly sales · October 2026</h2><p>Compare Ivy Road and Pantops totals, then record a source review. Tax treatment and return lines still need verification.</p><a class="button-link" href="#upload">Continue monthly workflow</a></section>
+<section class="panel"><h2>Other actions</h2><p>Verify the authoritative deadline and applicability source for each requirement before relying on a calendar reminder.</p><a href="#requirements">Review requirements →</a></section>
+<div class="table"><table><caption>Candidate obligations · illustrative, unverified</caption><thead><tr><th>Requirement</th><th>Jurisdiction</th><th>Deadline</th><th>Status</th></tr></thead><tbody>
+<tr><td>Monthly sales tax</td><td>Virginia · both stores</td><td>Not verified</td><td>Needs verification</td></tr>
+<tr><td>Annual company filing</td><td>Virginia</td><td>Not verified</td><td>Needs verification</td></tr>
+<tr><td>Business license</td><td>Charlottesville City · Ivy Road</td><td>Not verified</td><td>Needs verification</td></tr>
+<tr><td>Business license</td><td>Albemarle County · Pantops</td><td>Not verified</td><td>Needs verification</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="upload" class="screen">
+<h1>Sales preparation</h1><p class="muted">One legal entity · two store exports · one monthly source package</p>
+<ol class="steps" aria-label="Monthly workflow"><li class="current">1 · Upload</li><li>2 · Reconcile</li><li>3 · Review</li></ol>
+<section class="action-card"><h2>Start with both stores</h2><p>In the authenticated app, upload one normalized PostalMate CSV per store for the same month. Validation commits both sources together.</p><a class="button-link" href="#reconcile">View sample reconciliation</a></section>
+<section class="panel"><h2>Upload store reports</h2><p class="preview-label">Preview only: uploading is disabled on this page.</p><label>Ivy Road CSV<input type="file" disabled aria-disabled="true" accept=".csv,text/csv"></label><label>Pantops CSV<input type="file" disabled aria-disabled="true" accept=".csv,text/csv"></label><p class="muted">The real application requires a signed-in owner or delegate and checks both files before creating a package.</p></section>
+<section class="panel"><h2>Sample month · October 2026 <span class="badge">Source review needed</span></h2><p>Illustrative CSV fixtures included in the public repository.</p><a href="#reconcile">Reconcile October sample →</a></section>
+</section>
+
+<section id="reconcile" class="screen">
+<h1>Reconcile monthly sales</h1><p class="muted">October 2026 · source totals from synthetic repository fixtures</p>
+<ol class="steps" aria-label="Monthly workflow"><li>1 · Upload</li><li class="current">2 · Reconcile</li><li>3 · Review</li></ol>
+<div class="table"><table><caption>October 2026 synthetic sales totals · dollars</caption><thead><tr><th>Store</th><th>Taxable sales</th><th>Nontaxable sales</th><th>Net sales control</th><th>Tax collected</th></tr></thead><tbody>
+<tr><th scope="row">Ivy Road</th><td>$1,000.00</td><td>$4,000.00</td><td>$5,000.00</td><td>$53.00</td></tr>
+<tr><th scope="row">Pantops</th><td>$2,000.00</td><td>$6,000.00</td><td>$8,000.00</td><td>$106.00</td></tr>
+<tr><th scope="row">Combined LLC</th><td>$3,000.00</td><td>$10,000.00</td><td>$13,000.00</td><td>$159.00</td></tr>
+</tbody></table></div>
+<section class="panel"><h2>Reconciliation checks</h2><ul class="checks"><li><strong>Both locations present</strong> <span class="badge">Sample passes</span><p>One illustrative file for each independent store database.</p></li><li><strong>Same reporting period</strong> <span class="badge">Sample passes</span><p>Both source rows are tagged 2026-10.</p></li><li><strong>Net sales controls</strong> <span class="badge">Sample passes</span><p>Taxable plus nontaxable equals the control for each store.</p></li><li><strong>PostalMate mapping and tax treatment</strong> <span class="badge">Unverified</span><p>Actual source columns, classifications and return lines require reviewed mapping.</p></li></ul></section>
+<section class="action-card"><h2>Next: source review</h2><p>Compare selected reports and note any differences before recording a source decision in the authenticated app.</p><a class="button-link" href="#review">View review screen</a></section>
+<p class="notice">The sample is not a tax return and is not ready to file.</p>
+</section>
+
+<section id="review" class="screen">
+<h1>Review monthly source package</h1><p class="muted">October 2026 · illustrative package · source review needed</p>
+<ol class="steps" aria-label="Monthly workflow"><li>1 · Upload</li><li>2 · Reconcile</li><li class="current">3 · Review</li></ol>
+<section class="panel"><h2>Next action</h2><p>Verify the selected reports and their totals. Record a source decision and notes in the authenticated app.</p></section>
+<section class="panel"><h2>Open blockers</h2><ul><li>Actual PostalMate export mapping has not been verified.</li><li>Tax categories and government return lines have not been verified.</li><li>Statutory deadlines require authoritative review.</li></ul></section>
+<section class="panel"><h2>Record source decision</h2><p class="preview-label">Preview only: decisions cannot be submitted here.</p><label>Source decision<select disabled aria-disabled="true"><option>Source totals reviewed</option><option>Needs information</option><option>Reject source package</option></select></label><label>Review notes<textarea disabled aria-disabled="true" placeholder="Explain the selected reports and any differences."></textarea></label><p class="muted">A source review never approves filing or payment.</p></section>
+<a href="#overview">Back to dashboard →</a>
+</section>
+
+<section id="requirements" class="screen"><h1>Requirements</h1><section class="panel"><h2>Review applicability</h2><p>The authenticated app records the source, rationale, owner and revision for each requirement. Saving a change invalidates its prior review and schedule.</p><p class="preview-label">This visual preview cannot change requirements.</p></section><a href="#overview">Back to dashboard →</a></section>
+<section id="schedules" class="screen"><h1>Schedules</h1><section class="panel"><h2>Review deadline rules</h2><p>Review an authoritative rule, preview old and proposed dates, then confirm the change. No statutory date is assumed here.</p><p class="preview-label">This visual preview cannot change schedules.</p></section><a href="#overview">Back to dashboard →</a></section>
+<section id="reminders" class="screen"><h1>Microsoft reminders</h1><section class="panel"><h2>Calendar and email</h2><p>The authenticated app connects an approved Microsoft account, selects a calendar, and tracks the reminder outbox. Live delivery requires separate setup and worker enablement.</p><p class="preview-label">This visual preview cannot connect an account or send reminders.</p></section><a href="#overview">Back to dashboard →</a></section>
+</main>
+<script>
+(function(){
+  const screens=Array.from(document.querySelectorAll(".screen"));
+  function show(){
+    const key=location.hash.slice(1);
+    const selected=screens.find(s=>s.id===key)||screens[0];
+    screens.forEach(s=>{s.hidden=s!==selected});
+    document.title=(selected.querySelector("h1")?.textContent||"Project Complied")+" · Project Complied preview";
+    window.scrollTo(0,0);
+  }
+  window.addEventListener("hashchange",show);show();
+})();
+</script>
+</body>
+</html>
