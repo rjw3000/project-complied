@@ -75,6 +75,17 @@ def login(db,user_id,password,now=None):
         db.execute("INSERT INTO sessions VALUES(?,?,?,?)",(digest(token),user_id,csrf,now+3600))
     return token,csrf
 
+def start_session(db,user_id,now=None):
+    now=int(time.time()) if now is None else now
+    user=db.execute("SELECT enabled FROM users WHERE id=?",(user_id,)).fetchone()
+    if user is None or not user["enabled"]:
+        raise PermissionError("Account disabled")
+    token=secrets.token_urlsafe(32)
+    csrf=secrets.token_urlsafe(32)
+    with db:
+        db.execute("INSERT INTO sessions VALUES(?,?,?,?)",(digest(token),user_id,csrf,now+3600))
+    return token
+
 def authenticate(db,token,now=None):
     now=int(time.time()) if now is None else now
     user=db.execute("""SELECT u.id,u.role,s.csrf FROM sessions s JOIN users u ON u.id=s.user_id
@@ -82,6 +93,14 @@ def authenticate(db,token,now=None):
                     (digest(token),now)).fetchone()
     if user is None:
         raise PermissionError("Sign-in required")
+    import os
+    microsoft=os.environ.get("COMPLIED_AUTH_MODE","local")=="microsoft"
+    if microsoft:
+        from complied.microsoft_identity import role_for
+        if not user["id"].startswith("ms:") or role_for(user["id"][3:])!=user["role"]:
+            raise PermissionError("Microsoft account not authorized")
+    elif user["id"].startswith("ms:"):
+        raise PermissionError("Microsoft account unavailable in local mode")
     return dict(user)
 
 def authorize(db,token,action,now=None):

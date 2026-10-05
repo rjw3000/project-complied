@@ -18,6 +18,33 @@ class GraphHTTPTransport:
         self.access_token=access_token
         self.enabled=enabled
         self.opener=opener or urllib.request.build_opener(NoRedirect())
+    def get_calendars(self):
+        if not self.enabled or not self.access_token or any(c in self.access_token for c in "\r\n"):
+            raise PermissionError("Microsoft calendar access unavailable")
+        request=urllib.request.Request(
+            "https://graph.microsoft.com/v1.0/me/calendars?$select=id,name&$top=50",
+            headers={"Authorization":"Bearer "+self.access_token,"Accept":"application/json"})
+        try:
+            response=self.opener.open(request,timeout=30)
+        except urllib.error.URLError as exc:
+            raise ValueError("Microsoft calendars unavailable") from exc
+        with response:
+            raw=response.read(65537)
+            if response.status!=200 or len(raw)>65536:
+                raise ValueError("Microsoft calendars unavailable")
+            values=json.loads(raw).get("value",[])
+            if not isinstance(values,list) or len(values)>50:
+                raise ValueError("Invalid Microsoft calendar list")
+            result=[]
+            for item in values:
+                if (not isinstance(item,dict) or not isinstance(item.get("id"),str) or
+                    not isinstance(item.get("name"),str) or
+                    not 0<len(item["id"])<=1000 or not 0<len(item["name"])<=200 or
+                    any(ord(char)<32 for char in item["id"]+item["name"])):
+                    raise ValueError("Invalid Microsoft calendar")
+                result.append({"id":item["id"],"name":item["name"]})
+            return result
+
     def post(self,path,body):
         if not self.enabled:
             raise PermissionError("Microsoft transport is disabled")

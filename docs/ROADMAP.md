@@ -44,3 +44,5 @@ M3 source increment: normalized synthetic import contract, immutable raw/source 
 M3/M4 source-review increment: authenticated source decisions, stale-context detection and downloadable evidence summaries implemented. This does not complete return-line preparation or filing/payment approval; those depend on reviewed actual reports/rules and verified submission context.
 
 Owner workflow increment: linked dashboard and monthly upload → reconcile → review screens with next actions. Synthetic normalized report controls and source versions are visible; native PostalMate mapping, statutory calculations, Microsoft identity and deployment remain next gates.
+
+Microsoft hosting increment: allowlisted Entra mode, encrypted delegated cache, owner calendar chooser, opt-in one-at-a-time worker and single-host Compose kit. Completion gate: owner provisions tenant/domain/host privately, confirms MFA/recipient/calendar, tests one controlled live reminder and backup restore before real data. No broad app permissions or auto filing/payment.

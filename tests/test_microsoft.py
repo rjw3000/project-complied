@@ -30,3 +30,18 @@ class MicrosoftTransportTests(unittest.TestCase):
         self.assertEqual(opener.request.get_method(),"POST")
     def test_redirects_denied(self):
         self.assertIsNone(NoRedirect().redirect_request(None,None,302,"",{},"https://attacker.invalid"))
+    def test_calendar_list_is_fixed_scope_and_bounded(self):
+        class CalendarResponse(Response):
+            status=200
+            def read(self,limit):
+                return b'{"value":[{"id":"calendar-one","name":"Internal dates"}]}'
+        class CalendarOpener(Opener):
+            def open(self,request,timeout):
+                self.request=request
+                return CalendarResponse()
+        opener=CalendarOpener()
+        client=GraphHTTPTransport("synthetic",enabled=True,opener=opener)
+        self.assertEqual(client.get_calendars(),[{"id":"calendar-one","name":"Internal dates"}])
+        self.assertEqual(opener.request.full_url,
+                         "https://graph.microsoft.com/v1.0/me/calendars?$select=id,name&$top=50")
+        self.assertEqual(opener.request.get_method(),"GET")

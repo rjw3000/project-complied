@@ -1,6 +1,6 @@
 # Microsoft reminder workflow
 
-5 October 2026. Local queue/preview implemented; live OAuth not configured; explicit operator HTTP transport available.
+5 October 2026. Local queue/preview and an opt-in Microsoft web sign-in and delegated worker are implemented. Tenant credentials, host and live delivery remain unprovisioned.
 
 ## Use
 
@@ -43,3 +43,7 @@ PYTHONPATH=src python3 -m complied.microsoft --execute --user owner-demo
 ```
 
 Without --execute, the command previews only. Supplying a delegated token is not automated OAuth provisioning. Do not put tokens in arguments, Git, chat or CI. No background sender or token refresh is configured. Interrupted inflight records require explicit recovery and reconciliation before any resend.
+
+## Microsoft-connected mode
+
+A single-tenant MSAL authorization-code flow signs in only configured owner/delegate object IDs. Owner consent separately connects Mail.Send and Calendars.ReadWrite to a dedicated calendar and recipient. The delegated token cache is encrypted at rest with a host-owned Fernet key; access tokens never appear in the UI or Git. Owner disconnect deletes the cache. Sessions expire after one hour, and changes to the allowed object IDs invalidate existing sessions. The scheduled worker is a separate Compose profile and refuses to run unless `COMPLIED_LIVE_SEND=1`. It obtains a refreshed owner token before claiming each due outbox item. See [single-host deployment](DEPLOYMENT.md). Live tenant/browser delivery and recovery still require controlled validation.

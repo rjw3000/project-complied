@@ -1,0 +1,2 @@
+msal==1.39.0
+cryptography==50.0.2
