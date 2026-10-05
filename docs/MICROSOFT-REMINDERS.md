@@ -1,6 +1,6 @@
 # Microsoft reminder workflow
 
-5 October 2026. Local queue/preview implemented; live OAuth and HTTP transport not connected.
+5 October 2026. Local queue/preview implemented; live OAuth not configured; explicit operator HTTP transport available.
 
 ## Use
 
@@ -24,7 +24,7 @@ Queued stale work cancels before sending. Previously created events whose task/d
 
 ## Graph adapter and setup gate
 
-MicrosoftGraphAdapter accepts an injected HTTP post transport and translates official v1.0 request/response contracts. No credentials are accepted by the UI, saved in the database or exposed in request previews. No live HTTP sender or OAuth consent has been provisioned.
+MicrosoftGraphAdapter accepts an injected HTTP post transport and translates official v1.0 request/response contracts. No credentials are accepted by the UI, saved in the database or exposed in request previews. GraphHTTPTransport uses a fixed commercial Graph HTTPS endpoint, denies redirects and restricts supported paths. It is disabled by default. No OAuth consent or live credentials have been provisioned.
 
 Before live use, configure an Entra application, supported delegated sign-in/token storage and consent, select the dedicated calendar and confirm the recipient. User-calendar creation requires Calendars.ReadWrite; mail requires Mail.Send. Choose the supported delegated flow after runtime hosting is selected. Do not use broad application permissions by default.
 
@@ -32,4 +32,14 @@ Official sources consulted 5 October 2026:
 https://learn.microsoft.com/en-us/graph/api/calendar-post-events?view=graph-rest-1.0
 https://learn.microsoft.com/en-us/graph/api/user-sendmail?view=graph-rest-1.0
 
-Calendar payload includes transactionId for duplicate protection. Mail 202 is acceptance only. Tests use synthetic transports; no emails or events are sent. Live completion requires controlled account testing, OAuth provisioning, scheduler deployment and reconciliation UI.
+Calendar payload includes transactionId for duplicate protection. Mail 202 is acceptance only. Tests use synthetic transports; no emails or events are sent. Live completion requires controlled account testing, OAuth provisioning/token refresh, scheduler deployment and reconciliation UI.
+
+## Explicit operator execution
+
+After Entra app setup and recipient/calendar confirmation, a local authorized operator may supply a delegated token at a hidden prompt. No token is stored. This sends at most one due request:
+
+```sh
+PYTHONPATH=src python3 -m complied.microsoft --execute --user owner-demo
+```
+
+Without --execute, the command previews only. Supplying a delegated token is not automated OAuth provisioning. Do not put tokens in arguments, Git, chat or CI. No background sender or token refresh is configured. Interrupted inflight records require explicit recovery and reconciliation before any resend.

@@ -103,4 +103,4 @@ PR #8 adds the local SQLite/read-only dashboard prototype; CI, CodeQL and Gitlea
 
 - 5 October 2026 — specifications, local dashboard and recurrence merged into main at b5f1055 after green checks. Local authenticated editing/review increment now in development; Microsoft reminders follow. Production identity remains unselected.
 
-- 5 October 2026 — authenticated local edit/review merged at 48a5a711 after green checks. Microsoft reminder queue/preview and injected adapter now added; OAuth, live transport and account testing remain pending.
+- 5 October 2026 — authenticated local edit/review merged at 48a5a711 after green checks. Microsoft reminder queue/preview and injected adapter now added; OAuth, live connection and account testing remain pending; explicit operator transport is disabled by default.
