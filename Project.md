@@ -114,3 +114,7 @@ PR #8 adds the local SQLite/read-only dashboard prototype; CI, CodeQL and Gitlea
 ## UI and deployment increment (5 October 2026)
 
 The internal prototype uses one consistent responsive shell with browser upload of both normalized per-store monthly CSVs. Import validation preserves immutable source hashes and keeps packages marked not return-ready. Microsoft sign-in, live reminders and hosting require tenant/app setup, dedicated recipient/calendar selection, secrets and a private persistent deployment. Do not treat an uploaded normalized CSV as a verified native PostalMate export.
+
+## Owner dashboard and monthly path (5 October 2026)
+
+The owner can begin at the dashboard and follow Upload → Reconcile → Review. The dashboard prioritizes deadline exceptions and the latest monthly package. Reconciliation exposes store controls, combined totals, selected source hashes, other imported versions, and pending legal/tax mapping; the review step records an auditable source decision. Changed sources stale earlier decisions. No screen marks a package return-ready or initiates filing/payment.

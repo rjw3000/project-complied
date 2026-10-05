@@ -105,7 +105,12 @@ class EditorHTTPTests(unittest.TestCase):
         db=connect(self.path)
         csrf=authenticate(db,cookie.split("=",1)[1])["csrf"]
         db.close()
-        self.assertIn("Monthly package review",self.request("GET","/package?id="+package_id,cookie=cookie)[2])
+        self.assertIn("Review monthly source package",self.request("GET","/package?id="+package_id,cookie=cookie)[2])
+        reconcile=self.request("GET","/reconcile?id="+package_id,cookie=cookie)[2]
+        self.assertIn("Store sales controls",reconcile)
+        self.assertIn("Combined LLC",reconcile)
+        self.assertIn("Continue to review",reconcile)
+        self.assertIn("Compare store totals",self.request("GET","/",cookie=cookie)[2])
         fields=dict(csrf=csrf,package_id=package_id,revision="0",context=fingerprint,decision="sources_reviewed",notes="<script>test</script>")
         self.assertEqual(self.request("POST","/package-review",fields,cookie)[0],303)
         status,headers,body=self.request("GET","/package-export?id="+package_id,cookie=cookie)
@@ -115,6 +120,7 @@ class EditorHTTPTests(unittest.TestCase):
         page=self.request("GET","/package?id="+package_id,cookie=cookie)[2]
         self.assertNotIn("<script>test</script>",page)
         self.assertIn("&lt;script&gt;",page)
+        self.assertIn("Verify tax treatment and return lines",self.request("GET","/",cookie=cookie)[2])
         self.assertEqual(self.request("GET","/package?id=missing",cookie=cookie)[0],404)
 
         self.assertEqual(headers["Content-Disposition"],'attachment; filename="complied-source-review.json"')
@@ -168,4 +174,5 @@ class EditorHTTPTests(unittest.TestCase):
         page=self.request("GET","/preparation",cookie=cookie)[2]
         self.assertIn('enctype="multipart/form-data"',page)
         self.assertIn("Review source package",page)
+        self.assertIn("Inspect reconciliation",page)
         self.assertIn("Main navigation",page)

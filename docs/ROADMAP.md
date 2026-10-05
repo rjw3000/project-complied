@@ -42,3 +42,5 @@ Schedule-review increment: authenticated rule entry and exact-preview confirmati
 M3 source increment: normalized synthetic import contract, immutable raw/source snapshots and both-store period validation are implemented. Authenticated UI displays source totals; package status remains not return-ready. Actual report mapping, refund semantics, reviewed classifications and return-line calculations await sample inputs.
 
 M3/M4 source-review increment: authenticated source decisions, stale-context detection and downloadable evidence summaries implemented. This does not complete return-line preparation or filing/payment approval; those depend on reviewed actual reports/rules and verified submission context.
+
+Owner workflow increment: linked dashboard and monthly upload → reconcile → review screens with next actions. Synthetic normalized report controls and source versions are visible; native PostalMate mapping, statutory calculations, Microsoft identity and deployment remain next gates.

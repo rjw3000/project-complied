@@ -11,3 +11,7 @@ Reviews and source packages are append-only. A reviewer may explicitly revalidat
 Download JSON from **Download source review packet**. Download requires a valid session and contains exact source totals/hashes, review history and unresolved blockers. export_type is source_review_packet_not_a_tax_return; return_ready remains false. Source review cannot authorize filing or payment or clear unverified tax rules.
 
 Schema v7 preserves existing records. Tests cover review/export authentication, stale sources/forms, immutable history, rejection, revocation, source completeness, HTML escaping and HTTP downloads. Actual PostalMate mapping, tax classifications, return-line calculations, government form and submission route remain pending.
+
+## Guided screens
+
+The owner dashboard points to the next monthly action. **Sales preparation** starts upload and lists the latest package for each month, with earlier packages accessible. **Reconcile monthly sales** shows source controls and their combined totals, selected hashes, alternate versions and clear passed/attention/pending checks. **Review monthly source package** records a decision and shows its blockers and history. The local prototype does not require a reviewer to claim that unverified tax treatment has passed; the return-ready flag stays false. 
