@@ -1,69 +1,50 @@
-# Compliance Automation — System Architecture
+# Project Complied — System Architecture
 
-Version: 0.1-R | Date: 3 October 2026 | Status: Reconstructed draft
+Version: 0.4 | Updated: 5 October 2026 | Status: Implementation design; stack not selected
 
-Reconstructed from the available conversation and proposed diagram. Technology choices are proposals, not selected products. This document does not establish verified tax rules or portal capabilities.
+## Approach
 
-## Architecture approach
+Modular internal application with relational persistence, private evidence storage and a durable worker. Choose stack/hosting through an ADR before dependency changes; existing Python is only an approval reference. No Grokbot/Claude framework is selected or required.
 
-Begin with a modular application, a durable relational database, an evidence store, and a background worker. Separate preparation from approval and external execution. This keeps the pilot manageable while allowing connectors and jurisdiction adapters to evolve independently.
+## Current proposed topology
 
-## Components
+```mermaid
+flowchart TD
+  P["PostalMate: two store exports"] --> I["Import and source validation"]
+  Q["QBO: optional reconciliation"] --> I
+  I --> R["Deterministic preparation"]
+  O["Reviewed obligation register"] --> W["Calendar and workflow"]
+  W --> N["M365 email and calendar"]
+  W --> R
+  R --> A["Authenticated review and approvals"]
+  A --> F["Manual filing handoff"]
+  A --> Y["Owner-only payment initiation"]
+  F --> E["Private evidence and audit"]
+  Y --> E
+  D["Dropbox evidence"] --> E
+```
+
+The earlier solution.png is a historical draft; this topology supersedes its QBO-first assumptions. No live account connection or external execution exists.
+
+## Boundaries and components
 
 | Component | Responsibility |
 |---|---|
-| Owner dashboard | Calendar, exceptions, package review, approvals, receipts, and status. |
-| Application API | Authentication, authorization, scope resolution, commands, and review queries. |
-| Obligation register | Reviewed requirements, applicability, provenance, versions, and recurrence. |
-| Scheduler and workflow engine | Periodic tasks, dependencies, durable states, reminders, and recovery. |
-| Connector layer | Scoped QuickBooks Online and Dropbox reads with capture metadata. |
-| Preparation module | Deterministic decimal calculations and evidence-package creation. |
-| Review and approval service | Exception gates, version-bound approval, and approval invalidation. |
-| Jurisdiction adapter | Verified Virginia submission or documented manual handoff. |
-| Payment adapter | Separately approved payment execution and reconciliation. |
-| Audit and evidence services | Action history, snapshots, hashes, receipts, and traceability. |
+| Dashboard/API | Identity, server permissions, upcoming/overdue/unresolved tasks, review and receipts |
+| Register/scheduler | Source-backed applicability, reviewed date rules, period tasks, timezone and recurrence |
+| Import/preparation | PostalMate store completeness, snapshot hashes, decimal totals, mappings and discrepancy gates |
+| Worker/outbox | Durable reminder attempts, event IDs, deduplication, failure/reconciliation queues |
+| Approval/operations | Immutable package scope, stale/revoked denial, separate approval purposes and transaction-safe ledger |
+| Evidence/audit | Private reports, hashes, versions, receipts, seven-year policy, append-only history |
 
-## Runtime flow
+Entities, locations, activities, jurisdictions, registrations, obligation versions, tasks, source snapshots, category mappings, rule versions, packages, exceptions, approvals, operations, notification attempts, receipts and audit events persist independently. QBO store differentiation is unnecessary for the initial import path; PostalMate provides location identity.
 
-1. Owner-confirmed business facts and reviewed obligations establish the calendar.
-2. Scheduler opens a scoped task for the filing period.
-3. Connectors capture authorized accounting data and supporting records.
-4. Preparation creates a versioned calculation package and reconciliation results.
-5. Review resolves exceptions and obtains professional input where required.
-6. Owner approves the exact filing package. Changed inputs invalidate approval.
-7. A verified adapter submits or creates a manual filing handoff.
-8. Submission acknowledgment and final acceptance are tracked separately.
-9. Payment requires its own owner approval; settlement is reconciled separately.
-10. Receipts and completed evidence return to the owner dashboard.
+## Execution and safety
 
-Rejected packages return to preparation. Unknown external outcomes enter a reconciliation queue and cannot be blindly retried.
+Owner-reviewed obligations create scoped tasks. Both store exports validate before entity aggregation. Preparation produces source-linked immutable packages; changes invalidate approvals. Authorized owner/delegate approves filing; manual submission attaches receipt and acceptance evidence. Payment approval is separate and defaults to owner-only; initiation is always owner-only. Unknown outcomes require reconciliation instead of blind retries.
 
-## Proposed data model
+Private evidence and secrets never enter public Git or CI. Separate worker permissions from API; connectors limited to authorized scope. Application OAuth permissions must be checked during implementation; do not claim provider scopes are read-only. Seven-year retention and backup/restore policy need explicit triggers and holds.
 
-Entities, stores, jurisdictions, registrations, obligations, obligation versions, tasks, periods, connector accounts, source snapshots, document references, calculation rules, package versions, exceptions, approvals, external operations, receipts, payment operations, and audit events.
+## Delivery boundaries
 
-Each operational record carries scope and timestamps. Approval references an immutable package version. External operations carry durable deduplication keys. Secrets are stored separately from application records. QuickBooks remains the accounting source; Dropbox remains the supporting-document source; the application owns workflow state and approval history.
-
-## Deployment and trust boundaries
-
-Deploy application and worker with distinct service permissions. Restrict database and secret-store access to authorized services. Limit integration credentials by purpose and account scope. Keep external writes behind the approval service and enabled adapters. Retain source evidence according to a policy agreed before launch. Hosting provider, language, database product, notification channel, and recovery objectives remain open.
-
-## Development coordination
-
-Grokbot is proposed as the development coordinator, Claude Code as the implementation agent, and ChatGPT as the QA reviewer. The Grokbot framework is not selected. These are development roles; runtime filing and payment authority remains with the application approval controls and the owner.
-
-A proposed delivery cycle is: reviewed specification → implementation branch → automated checks → ChatGPT QA evidence → reviewed release. Production secrets do not enter prompts or source control. Use synthetic/redacted fixtures for development.
-
-## Delivery phases
-
-- Phase 1: business facts, requirement discovery, reviewed obligation register, and calendar.
-- Phase 2: QuickBooks and Dropbox reads, source capture, and store mapping.
-- Phase 3: monthly preparation, reconciliation, review, approvals, and internal pilot.
-- Phase 4: verified Virginia filing route, receipts, and manual fallback.
-- Phase 5: separate payment approval, execution, and settlement reconciliation.
-
-The earlier estimate of 12–16 weeks or longer applies provisionally to the internal pilot, not guaranteed full filing/payment automation.
-
-## Decisions required before implementation
-
-Confirm QuickBooks store dimensions, Virginia account/access and submission route, pilot entity scope, review ownership, calculation rules, retention, hosting, and Grokbot framework. Choose technologies after these constraints are resolved.
+Calendar and synthetic imports can proceed now. Live M365/Dropbox/QBO access, verified tax calculations and portal operations require their own input/authorization gates. Portal API existence is unverified; manual filing is first. Google, automatic submission/payment and commercial tenancy are later work. See [roadmap](../ROADMAP.md) and [handoff](../../Handoff.md).

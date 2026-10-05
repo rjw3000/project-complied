@@ -1,10 +1,10 @@
 # Project Complied — Continuation Handoff
 
-Version: 0.3 | Updated: 5 October 2026 | Owner: RJ Williams
+Version: 0.4 | Updated: 5 October 2026 | Owner: RJ Williams
 
 ## Read first
 
-Read [Project.md](Project.md), [AGENTS.md](AGENTS.md), [README.md](README.md), and the [technical requirements](docs/specs/02-Technical-Requirements.md). Project.md contains the latest confirmed business facts; older reconstructed specifications have unaligned assumptions. Do not restart discovery or ask the already answered 22 questions again.
+Read [Project.md](Project.md), [AGENTS.md](AGENTS.md), [README.md](README.md), and the [technical requirements](docs/specs/02-Technical-Requirements.md). Project.md contains the latest confirmed business facts; specifications are aligned to the 5 October owner answers. Do not restart discovery or ask the already answered 22 questions again.
 
 ## Current objective
 
@@ -22,7 +22,7 @@ All 14 follow-up topics received owner responses; do not repeat the questionnair
 
 Remaining targeted inputs:
 
-- Official city/county jurisdiction and registration/location reporting for each store.
+- Owner confirms Ivy/Charlottesville City and Pantops/Albemarle County. Verify registration and location reporting; do not re-ask the jurisdiction question.
 - Redacted monthly PostalMate report from each database, plus sample receipt lines separating shipping, packing labor, materials, and bundled charges. Column names and totals must be inspected before choosing an import contract.
 - State/company and local license notices; verify annual fee/report terminology, filing form, frequency, dates, and receipt requirements.
 - Portal readiness, dedicated M365 calendar, reminder timing, and equipment/vehicle inventory remain open.
@@ -32,7 +32,7 @@ Owner portal setup is pending. Professional review is optional/unarranged; owner
 
 ## Next implementation work
 
-1. Align PRD, technical requirements, architecture, and roadmap to confirmed Project.md facts through a reviewed PR.
+1. Execute milestone M1 in docs/ROADMAP.md: application scaffold, schema, synthetic seed, obligation register and deadline dashboard. Record stack decision before adding dependencies.
 2. Design entity/location/activity facts, obligation provenance, unresolved applicability, recurrence, delegate roles, evidence retention, and package versioning.
 3. Define a synthetic fixture format for PostalMate and accounting exports without assuming actual export columns.
 4. Design deadline dashboard and notification preferences with a Microsoft-first adapter boundary and future Google support.
@@ -44,7 +44,7 @@ Do not connect live accounts, implement guessed tax rules, or automate portal wr
 
 - Confirm facts and identify authoritative federal/state/local sources. Distinguish owner practice from verified legal treatment.
 - Verify registration, actual filing frequency/form/deadline, location reporting, and November submission route.
-- Establish per-store PostalMate synthetic/reconciled monthly fixtures and one combined entity package and expected calculation package.
+- Establish per-store PostalMate synthetic/reconciled monthly fixtures and one combined entity package with expected totals.
 - Select stack and hosting; build obligation register, calendar, reminders, and owner dashboard.
 - Add source collection and deterministic preparation, review, separate approvals, and receipts.
 - Validate monthly process before enabling filing; payment follows with its own gate.
@@ -78,4 +78,6 @@ For new answers: update Project.md facts and remove/resolve the matching pending
 
 - 3 October 2026 — v0.2: first living handoff, incorporating owner answers and 14 pending follow-up questions; security foundation complete and application build pending.
 
-- 5 October 2026 — v0.3: follow-up answers recorded; replaced answered questions with concrete validation inputs. Prioritize deadline prototype and PostalMate imports. Older specifications and architecture image still need alignment before implementation; QBO-first assumptions are superseded.
+- 5 October 2026 — v0.3: follow-up answers recorded; replaced answered questions with concrete validation inputs. Prioritize deadline prototype and PostalMate imports. QBO-first assumptions are superseded.
+
+- 5 October 2026 — v0.4: jurisdiction and handling clarifications captured; implementation-ready specifications and milestone plan published. The Mermaid architecture is current; the old PNG is historical.

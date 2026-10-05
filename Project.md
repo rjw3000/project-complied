@@ -1,6 +1,6 @@
 # Project Complied — Project Record
 
-Version: 0.3 | Updated: 5 October 2026 | Owner: RJ Williams
+Version: 0.4 | Updated: 5 October 2026 | Owner: RJ Williams
 Status: Internal pilot planning; repository foundation implemented
 
 ## Purpose and authority
@@ -22,6 +22,7 @@ This is the living business-scope and decision record. [Handoff.md](Handoff.md) 
 | Virginia portal | Access/setup not yet completed; RJ plans to arrange it |
 | Historical example | Not available now; owner can perform a test |
 | Documents | One sales-tax filing folder in Dropbox, organized by date |
+| Goods and handling | Physical goods are taxable; owner reports tax is collected and remitted. Handling is immaterial per owner, not an exemption or approved tolerance. |
 | Known complexity | Owner currently treats third-party shipping cost and packing services as nontaxable; legal treatment remains unverified |
 | Reviewer | Owner initially; professional reviewer may be available later |
 | Approval authority | Owner-authorized delegate may perform all duties except initiate payments. Filing and payment remain separate approvals; owner alone initiates payment |
@@ -53,7 +54,7 @@ Use deterministic, versioned calculations with reviewed rules. AI may assist dis
 
 ## Follow-up facts confirmed 5 October 2026
 
-- Two Virginia stores; owner supplied exact addresses in conversation. Keep them outside this public repository; verify city versus county jurisdiction from official records, not the postal city label.
+- Two Virginia stores; owner supplied exact addresses in conversation. Keep them outside this public repository; owner confirms Ivy is Charlottesville City and Pantops is Albemarle County. Official validation of registrations and location reporting remains pending.
 - Activities: shipping, packing, merchandise, mailbox rental, printing, and freight; no notary. Exact invoice categories and bundled charges await sample reports/receipts.
 - Known duties: annual state company filings, monthly sales tax, and annual county/city business licenses. These owner-reported duties are a discovery seed, not a verified complete statutory catalog.
 - Monthly sales-tax deadlines have been missed; prioritize reminders and overdue visibility.
@@ -93,3 +94,5 @@ Update after each material user answer, decision, implementation milestone, or v
 - 3 October 2026 — v0.2: captured 22 owner answers; internal scope, both stores, PostalMate gap, deadline priority, delegated approvals, seven-year retention, 40 hours/month, and intended October/November pilot. Stack, budget, dates, and tax applicability remain open.
 
 - 5 October 2026 — v0.3: resolved follow-up business questions; PostalMate primary, owner-only payment initiation, Microsoft 365, federal/state/local discovery, owner development, software/hosting budget allowance proposed.
+
+- 5 October 2026 — v0.4: owner confirms Ivy/Charlottesville City and Pantops/Albemarle County, physical goods taxed, handling immaterial. Specifications and delivery plan aligned; monetary tolerance remains unset.
