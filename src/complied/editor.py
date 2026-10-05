@@ -77,6 +77,43 @@ def reminders_page(db,user):
         content+='<pre style="white-space:pre-wrap">'+escape(row["payload"])+'</pre></form>'
     return page("Microsoft reminders",content)
 
+
+def schedules_page(db,user):
+    csrf=hidden("csrf",user["csrf"])
+    content='<p><a href="/">Dashboard</a> · <a href="/register">Requirement review</a></p>'
+    content+='<p>Enter a reviewed schedule, preview its effect, then confirm. No statutory dates are supplied automatically.</p>'
+    content+='<form method="post" action="/schedule-preview">'+csrf+'<label>Reviewed requirement<select name="obligation_id">'
+    for row in db.execute("SELECT id,title FROM obligations WHERE status='applicable' AND reviewed=1 ORDER BY title"):
+        content+='<option value="'+escape(row["id"],quote=True)+'">'+escape(row["title"])+'</option>'
+    content+='</select></label>'
+    for name,label,kind in [
+        ("anchor","First month of recurrence (first day)","date"),
+        ("effective_start","First eligible period month (first day)","date"),
+        ("effective_end","Last eligible period month (first day)","date"),
+        ("first_period","First period to preview (YYYY-MM)","month"),
+        ("count","Number of periods (1–120)","number"),
+        ("due_day","Day of target month (1–31)","number"),
+        ("due_month_offset","Additional months after period ends (0–12)","number"),
+        ("source","Authoritative source","text"),("reason","Reason for schedule approval/change","text")]:
+        content+=field(name,label,kind=kind)
+    content+='<label>Period length<select name="period_months"><option value="1">Monthly</option><option value="3">Quarterly</option><option value="12">Annual</option></select></label>'
+    content+='<label>When day is absent from month<select name="short_month"><option value="reject">Require correction</option><option value="last_day">Use last day, if authority supports it</option></select></label>'
+    content+='<label>Weekend/holiday policy<select name="roll"><option value="none">No adjustment</option><option value="next_business_day">Next business day</option></select></label>'
+    content+='<label>Holiday calendar starts<input type="date" name="calendar_start"></label><label>Holiday calendar ends<input type="date" name="calendar_end"></label>'
+    content+='<label>Reviewed holidays, one ISO date per line<textarea name="holidays"></textarea></label><button>Preview schedule</button></form>'
+    return page("Review deadline schedules",content)
+
+def schedule_preview_page(proposal,preview,user):
+    content='<p>Review each change. This preview expires in 15 minutes. Confirmation applies the entire batch.</p><table><tr><th>Period</th><th>Old deadline</th><th>Proposed deadline</th><th>Action</th></tr>'
+    for row in preview["rows"]:
+        old=(row["before"] or {}).get("due_date") or "None"
+        content+='<tr>'+''.join('<td>'+escape(str(value))+'</td>' for value in [row["period"],old,row["due_date"],row["action"]])+'</tr>'
+    content+='</table><p>Completed tasks and unresolved external operations cannot be overwritten. Queued stale reminders will be cancelled; sent messages remain in history.</p>'
+    if not any(row["action"].startswith("blocked") for row in preview["rows"]):
+        content+='<form method="post" action="/schedule-confirm">'+hidden("csrf",user["csrf"])+hidden("proposal_id",proposal)+'<button>Confirm reviewed schedule</button></form>'
+    content+='<a href="/schedules">Back to schedules</a>'
+    return page("Confirm schedule changes",content)
+
 def handler_for(db_path):
     class Handler(BaseHTTPRequestHandler):
         def origin(self):
@@ -117,20 +154,22 @@ def handler_for(db_path):
                 form='<form method="post" action="/login">'+field("user","User")+field("password","Password",kind="password")+'<button>Sign in</button></form>'
                 self.respond(200,page("Project Complied sign-in",form))
                 return
-            if path not in ("/","/register","/reminders"):
+            if path not in ("/","/register","/reminders","/schedules"):
                 self.send_error(404)
                 return
             db=connect(db_path)
             try:
                 user=authenticate(db,self.token())
-                if path=="/reminders":
+                if path=="/schedules":
+                    content=schedules_page(db,user)
+                elif path=="/reminders":
                     content=reminders_page(db,user)
                 elif path=="/register":
                     content=register_page(db,user)
                 else:
                     from complied.web import render
                     today=datetime.now(ZoneInfo("America/New_York")).date()
-                    content=render(dashboard(db,today),today).replace("<header>","<header><p><a href='/register'>Edit and review requirements</a> · <a href='/reminders'>Microsoft reminders</a></p>",1)
+                    content=render(dashboard(db,today),today).replace("<header>","<header><p><a href='/register'>Edit and review requirements</a> · <a href='/reminders'>Microsoft reminders</a> · <a href='/schedules'>Review schedules</a></p>",1)
                 self.respond(200,content)
             except PermissionError:
                 self.redirect("/login")
@@ -141,7 +180,7 @@ def handler_for(db_path):
                 self.send_error(403)
                 return
             path=urlsplit(self.path).path
-            if path not in ("/login","/logout","/create","/edit","/review","/configure-reminders","/queue-reminder"):
+            if path not in ("/login","/logout","/create","/edit","/review","/configure-reminders","/queue-reminder","/schedule-preview","/schedule-confirm"):
                 self.send_error(404)
                 return
             try:
@@ -149,7 +188,7 @@ def handler_for(db_path):
                 if not 0<length<=16384 or self.headers.get("Content-Type","").split(";")[0]!="application/x-www-form-urlencoded":
                     self.send_error(400)
                     return
-                values=parse_qs(self.rfile.read(length).decode("utf-8"),keep_blank_values=True,max_num_fields=12)
+                values=parse_qs(self.rfile.read(length).decode("utf-8"),keep_blank_values=True,max_num_fields=24)
                 if any(len(v)!=1 for v in values.values()):
                     raise ValueError("Duplicate form fields")
                 fields={k:v[0] for k,v in values.items()}
@@ -169,6 +208,21 @@ def handler_for(db_path):
                 if path=="/logout":
                     logout(db,token)
                     self.redirect("/login","complied_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0")
+                elif path=="/schedule-preview":
+                    from complied.schedules import propose
+                    definition={key:fields[key] for key in ("anchor","effective_start","effective_end","short_month","roll")}
+                    for key in ("period_months","due_month_offset","due_day"):
+                        definition[key]=int(fields[key])
+                    definition["calendar_start"]=fields.get("calendar_start") or None
+                    definition["calendar_end"]=fields.get("calendar_end") or None
+                    definition["holidays"]=[line.strip() for line in fields.get("holidays","").splitlines() if line.strip()]
+                    proposal,preview=propose(db,token,fields["obligation_id"],definition,fields["source"],
+                                             fields["first_period"],int(fields["count"]),fields["reason"])
+                    self.respond(200,schedule_preview_page(proposal,preview,user))
+                elif path=="/schedule-confirm":
+                    from complied.schedules import confirm
+                    confirm(db,token,fields["proposal_id"])
+                    self.redirect("/")
                 elif path=="/configure-reminders":
                     from complied.reminders import configure
                     configure(db,token,fields["recipient"],fields["calendar_id"])

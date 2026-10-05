@@ -80,3 +80,7 @@ PYTHONPATH=src python3 -m complied.access disable-user --user delegate-demo
 ## Microsoft reminders
 
 Sign in, open **Microsoft reminders**, configure destinations as owner and queue previews for verified current tasks. Email scheduling and calendar payloads are persisted with deduplication and attempt history. [Setup and behavior](docs/MICROSOFT-REMINDERS.md). Microsoft transport is disabled by default. Preview commands never send; explicit operator execution requires separately provisioned delegated authorization. OAuth and automatic scheduling remain pending.
+
+## Review schedule changes
+
+After reviewing applicability, open **Review schedules**. Enter the authoritative rule, preview old/proposed deadlines and confirm the batch. Stale previews, completed-task replacement and uncertain external activity are blocked. Queued reminders cancel when their schedule changes. [Schedule review](docs/SCHEDULE-REVIEW.md).

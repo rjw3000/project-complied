@@ -35,6 +35,8 @@ def connect(path):
     migrate_access(db)
     from complied.reminders import migrate as migrate_reminders
     migrate_reminders(db)
+    from complied.schedules import migrate as migrate_schedules
+    migrate_schedules(db)
     return db
 
 def add_obligation(db, *, id, title, jurisdiction, owner, status="unresolved",

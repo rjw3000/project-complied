@@ -1,99 +1,44 @@
 # Project Complied — Continuation Handoff
 
-Version: 0.4 | Updated: 5 October 2026 | Owner: RJ Williams
+Version: 0.5 | Updated: 5 October 2026 | Owner: RJ Williams
 
 ## Read first
 
-Read [Project.md](Project.md), [AGENTS.md](AGENTS.md), [README.md](README.md), and the [technical requirements](docs/specs/02-Technical-Requirements.md). Project.md contains the latest confirmed business facts; specifications are aligned to the 5 October owner answers. Do not restart discovery or ask the already answered 22 questions again.
+Read [Project.md](Project.md), [AGENTS.md](AGENTS.md), [README.md](README.md), [specifications](docs/specs/02-Technical-Requirements.md) and [roadmap](docs/ROADMAP.md). Do not repeat answered business questions. Latest owner facts override old planning assumptions.
 
-## Current objective
+## Implemented state
 
-Internal tool for Whitewater Package Depot LLC and both stores. First priority: avoid missed deadlines. Intended first preparation cycle is October 2026 sales for submission in November; deadline and required return must be verified. Owner has 40 hours/month. Manual filing is acceptable initially. Filings may be handled by an owner-authorized delegate; payment initiation is owner-only. Separate filing/payment approvals remain required.
+Main milestone 1159fbc contains merged PRs #7–#11: aligned specs, local SQLite register/dashboard, reviewed recurrence, authenticated requirement editing/review, audit trail and Microsoft reminder outbox/previews with explicitly enabled operator transport. Those changes passed 49 tests, smoke checks, CodeQL and Gitleaks. Fetch current main before editing.
 
-## Where work stands
+This increment adds authenticated schedule preview/confirmation, additive schema v5 and schedule-revision-bound reminders. See [schedule review](docs/SCHEDULE-REVIEW.md). Previous implementation remains synthetic local development; production hosting/identity and live integrations are not configured.
 
-Repository foundation and security completed. PR #6 merged at `8882590f0e0966fd68eebe26140c39e87647e320`; security issue #4 closed. That SHA is a verified milestone, not a guarantee of current HEAD. Fetch the live repository before editing. Other PRs/issues may have changed, including Dependabot updates; inspect before acting.
+## Business scope
 
-A local synthetic dashboard is available; production account connections, tax calculations, notification delivery and external execution remain pending. Python approval controls are a reference implementation, not a chosen production stack. The current policy assumes trusted approval objects; authentication, persistence, and concurrency-safe execution remain pending.
+Whitewater Package Depot LLC; Ivy/Charlottesville City and Pantops/Albemarle County, per owner. PostalMate has one database per store and is the sales-tax source; QBO bank feeds support accounting reconciliation. Internal tool; federal/state/local discovery; missed sales-tax deadlines first. Employees and leased premises. Physical goods taxed per owner; handling immaterial per owner, not an inferred legal exemption or tolerance.
 
-## Follow-up answers received 5 October 2026
+Owner has 40 hours/month; no paid development. Proposed incremental software/hosting allowance $100/month, cap $150, unapproved. Microsoft 365 first; Google later. Owner-approved delegates may perform duties except payment initiation. Payment approval defaults to owner until clarified. Seven-year retention required; triggers/holds remain open.
 
-All 14 follow-up topics received owner responses; do not repeat the questionnaire. See Project.md for confirmed facts. Exact location addresses stay outside public Git.
+## Next work
 
-Remaining targeted inputs:
+1. Synthetic per-store import contract, source snapshot capture and reconciliation package; map actual PostalMate columns only after sample review.
+2. Extend review workflow for externally created calendar events and unknown outcomes; never blindly resend.
+3. Provision production identity/hosting and Microsoft delegated OAuth/token refresh, dedicated calendar and recipient confirmation before live testing.
+4. Verify duty sources, registration/location reporting, actual tax form/frequency/deadline and portal route.
+5. Prepare a rehearsed monthly package and then the October/November pilot if inputs and verified timing allow.
 
-- Owner confirms Ivy/Charlottesville City and Pantops/Albemarle County. Verify registration and location reporting; do not re-ask the jurisdiction question.
-- Redacted monthly PostalMate report from each database, plus sample receipt lines separating shipping, packing labor, materials, and bundled charges. Column names and totals must be inspected before choosing an import contract.
-- State/company and local license notices; verify annual fee/report terminology, filing form, frequency, dates, and receipt requirements.
-- Portal readiness, dedicated M365 calendar, reminder timing, and equipment/vehicle inventory remain open.
-- Determine delegate payment-approval scope separately from the confirmed prohibition on delegate payment initiation; default to owner-only payment approval and initiation until clarified.
+## Inputs still needed
 
-Owner portal setup is pending. Professional review is optional/unarranged; owner is the initial reviewer. Do not imply accountant approval.
+Redacted monthly reports from both stores, sample receipt classifications, registration/license notices, portal readiness, calendar/recipient, equipment/vehicle inventory and reminder cadence. Exact addresses and financial records remain outside public Git. Professional review unarranged; never imply signoff.
 
-## Next implementation work
+## Controls and validation
 
-1. Execute milestone M1 in docs/ROADMAP.md: application scaffold, schema, synthetic seed, obligation register and deadline dashboard. Record stack decision before adding dependencies.
-2. Design entity/location/activity facts, obligation provenance, unresolved applicability, recurrence, delegate roles, evidence retention, and package versioning.
-3. Define a synthetic fixture format for PostalMate and accounting exports without assuming actual export columns.
-4. Design deadline dashboard and notification preferences with a Microsoft-first adapter boundary and future Google support.
-5. Propose a small milestone plan and budget options using the proposed $100/month allowance and $150/month cap; validate actual vendor costs; do not reuse the provisional reserve as approved.
+Source-linked unresolved applicability stays visible. Edits invalidate prior review and schedules. Completed records retain history. Separate filing/payment approval, owner-only payment initiation, immutable package scope, operation deduplication and unknown-outcome reconciliation survive every change. Reference approval objects are not a production filing service.
 
-Do not connect live accounts, implement guessed tax rules, or automate portal writes while these dependencies are unresolved.
-
-## Next sequence
-
-- Confirm facts and identify authoritative federal/state/local sources. Distinguish owner practice from verified legal treatment.
-- Verify registration, actual filing frequency/form/deadline, location reporting, and November submission route.
-- Establish per-store PostalMate synthetic/reconciled monthly fixtures and one combined entity package with expected totals.
-- Select stack and hosting; build obligation register, calendar, reminders, and owner dashboard.
-- Add source collection and deterministic preparation, review, separate approvals, and receipts.
-- Validate monthly process before enabling filing; payment follows with its own gate.
-
-## Controls that must survive
-
-- Business data stays out of public Git, CI logs, and agent prompts unless explicitly authorized for an approved route.
-- Unknown applicability and incomplete source records remain visible; do not present unsupported completeness.
-- Approval binds entity, jurisdiction, period, amount, destination, and immutable package version.
-- Changed packages invalidate approvals. Filing approval cannot authorize payment.
-- Durable operation identifiers and unknown-outcome reconciliation are prerequisites to external execution.
-- Seven-year retention is confirmed; retention start, deletion/hold policy, backup scope, and legal sufficiency remain open.
-- Full SHA-pinned Actions, reviewed PRs, passing checks, and restricted bot privileges remain enforced.
-
-## Validation and delivery
-
-From repository root:
+Run:
 
 ```sh
 python3 scripts/check_repository.py
 python3 -m unittest discover -s tests -v
 ```
 
-Use meaningful tests for new behavior. Verify CI/CodeQL/Gitleaks at the PR head before release. Respect main protection and use branches/PRs. This handoff does not grant blanket merge or account-write authorization. Follow current session authorization; obtain explicit approval when an automatic approval review requires it.
-
-## Maintaining the records
-
-For new answers: update Project.md facts and remove/resolve the matching pending question here. For decisions: record selected option, date, rationale, and remaining dependencies. For implementation: record PR/commit, checks and scope of completion. For unresolved blockers: state the evidence and exact next action. Update both files together; do not record secrets or sensitive evidence in either.
-
-## Change log
-
-- 3 October 2026 — v0.2: first living handoff, incorporating owner answers and 14 pending follow-up questions; security foundation complete and application build pending.
-
-- 5 October 2026 — v0.3: follow-up answers recorded; replaced answered questions with concrete validation inputs. Prioritize deadline prototype and PostalMate imports. QBO-first assumptions are superseded.
-
-- 5 October 2026 — v0.4: jurisdiction and handling clarifications captured; implementation-ready specifications and milestone plan published. The Mermaid architecture is current; the old PNG is historical.
-
-## Local deadline prototype added
-
-ADR 001 selects Python standard library/SQLite for synthetic M1 only. Use README seed/run commands. Added persistent obligation/task schema, loopback read-only dashboard, review gates, duplicate task prevention, and behavior tests. Still pending: authenticated editing, versioned obligation changes, recurrence generation, notifications, imports and production selection. Existing approval module remains a reference. CI must validate this implementation; offline workspace prevented local execution. Do not call M1 complete yet.
-
-## Recurrence increment — 5 October 2026
-
-Previous prototype checks passed at 0d0d1d3. This increment adds schema v2, immutable schedule definitions, monthly/quarterly/annual generation and atomic conflict handling. Follow README to generate demo periods and docs/RECURRENCE.md for policy semantics. No real deadlines are populated. Next: authenticated editing and review/reconciliation UI, then durable reminder outbox. Full obligation versioning, background scheduling and notification delivery remain pending. Validate the latest PR head before merge.
-
-## Authenticated editing increment
-
-PRs #7/#8/#9 merged after passing checks; main milestone b5f1055. This increment adds local scrypt accounts, expiring/revocable sessions, CSRF-protected edit/review forms, revision-bound schedules and append-only change audit. Existing approved dates become unresolved after review changes. No payment endpoint exists; delegate payment-initiation authorization is denied. Next implementation: durable Microsoft reminder outbox and adapter tests. Production Entra identity, calendar/mail consent and actual delivery require account configuration. Follow README and docs/AUTHENTICATED-EDITING.md.
-
-## Microsoft reminder increment
-
-Authenticated edit/review PR #10 merged green at 48a5a711. Reminder queue/preview adds owner-configured destinations, email/calendar Graph payloads, durable attempt tracking and unknown-outcome recovery. A fixed-endpoint HTTP transport is available but disabled by default. Live OAuth and background scheduling are not provisioned. Next inputs: tenant/application setup, calendar ID and recipient confirmation. Current UI accepts local synthetic destinations only for preview; no live connection made. Read docs/MICROSOFT-REMINDERS.md before enabling delivery.
+Use branches/PRs and validate the exact head with required checks. User has authorized PR creation and merge when green in this session; address review findings first. No bot auto-approval or auto-merge. No live secrets or business records in Git/CI. Maintain Project.md and this handoff with each milestone.

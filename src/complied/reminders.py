@@ -84,7 +84,7 @@ def enqueue(db,token,task_id,channel,offset_days=7):
             raise ValueError("Verified current task and owner settings required")
         if channel=="calendar":
             offset_days=0 # one event per task/version, not one event per email reminder
-        identity=[task_id,row["revision"],channel,offset_days,settings["version"]]
+        identity=[task_id,row["revision"],row["schedule_revision"],channel,offset_days,settings["version"]]
         key=hashlib.sha256(json.dumps(identity).encode()).hexdigest()
         due=date.fromisoformat(row["due_date"])
         send_on=due-timedelta(days=offset_days)
@@ -95,9 +95,9 @@ def enqueue(db,token,task_id,channel,offset_days=7):
             scheduled=int(time.time())
         payload=request_payload(channel,row,settings,key)
         cursor=db.execute("""INSERT OR IGNORE INTO reminder_outbox
-            (id,task_id,obligation_revision,channel,offset_days,scheduled_at,settings_version,payload,status)
-            VALUES(?,?,?,?,?,?,?,?,'queued')""",
-            (key,task_id,row["revision"],channel,offset_days,scheduled,settings["version"],json.dumps(payload)))
+            (id,task_id,obligation_revision,channel,offset_days,scheduled_at,settings_version,payload,status,schedule_revision)
+            VALUES(?,?,?,?,?,?,?,?,'queued',?)""",
+            (key,task_id,row["revision"],channel,offset_days,scheduled,settings["version"],json.dumps(payload),row["schedule_revision"]))
         if cursor.rowcount:
             audit(db,user,"queue-reminder",key,{"task":task_id,"channel":channel,"offset_days":offset_days})
         db.commit()
@@ -112,7 +112,7 @@ def list_outbox(db):
     for row in db.execute("SELECT * FROM reminder_outbox ORDER BY scheduled_at,id"):
         item=dict(row)
         current=task(db,row["task_id"])
-        item["needs_reconciliation"]=not valid(current) or current["revision"]!=row["obligation_revision"] or not settings or settings["version"]!=row["settings_version"]
+        item["needs_reconciliation"]=not valid(current) or current["revision"]!=row["obligation_revision"] or current["schedule_revision"]!=row["schedule_revision"] or not settings or settings["version"]!=row["settings_version"]
         result.append(item)
     return result
 
@@ -127,7 +127,7 @@ def dispatch_one(db,transport,now=None):
             return None
         current=task(db,row["task_id"])
         settings=db.execute("SELECT version FROM reminder_settings WHERE singleton=1").fetchone()
-        if not valid(current) or current["revision"]!=row["obligation_revision"] or not settings or settings["version"]!=row["settings_version"]:
+        if not valid(current) or current["revision"]!=row["obligation_revision"] or current["schedule_revision"]!=row["schedule_revision"] or not settings or settings["version"]!=row["settings_version"]:
             db.execute("UPDATE reminder_outbox SET status='cancelled',error='Task or destination changed' WHERE id=?",(row["id"],))
             db.commit()
             return "cancelled"
