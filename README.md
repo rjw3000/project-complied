@@ -39,7 +39,7 @@ PYTHONPATH=src python3 -m complied.deadlines seed
 PYTHONPATH=src python3 -m complied.web
 ```
 
-Open http://127.0.0.1:8080. The dashboard is read-only, loopback-only, and uses synthetic data. Demo tasks have illustrative dates; real candidate duties remain unresolved. Do not load real financial data or expose this server publicly.
+Open http://127.0.0.1:8080. The dashboard is loopback-only and uses synthetic data. Sign-in protects the dashboard and editing/review forms. Demo tasks have illustrative dates; real candidate duties remain unresolved. Do not load real financial data or expose this server publicly.
 
 ```sh
 PYTHONPATH=src python3 -m complied.deadlines list --today 2026-10-05
@@ -47,7 +47,7 @@ python3 scripts/check_repository.py
 python3 -m unittest discover -s tests -v
 ```
 
-Local database is var/demo.sqlite3 (excluded from Git). Seed is repeatable. [ADR 001](docs/decisions/001-local-prototype.md) records the prototype-only stack decision. No authenticated editing, notification delivery, PostalMate import or filing/payment execution exists yet.
+Local database is var/demo.sqlite3 (excluded from Git). Seed is repeatable. [ADR 001](docs/decisions/001-local-prototype.md) records the prototype-only stack decision. Local authenticated editing/review is implemented; production identity, notification delivery, PostalMate imports and filing/payment execution remain pending.
 
 ## Generate synthetic recurring deadlines
 
@@ -59,3 +59,20 @@ PYTHONPATH=src python3 -m complied.deadlines list --today 2026-10-05
 ```
 
 This adds three monthly demo periods and is safe to repeat. The dashboard shows them on refresh. No actual statutory dates are configured. [Schedule contract](docs/RECURRENCE.md) describes monthly, quarterly and annual periods, explicit short-month/holiday policies and conflict handling.
+
+## Local sign-in and requirement review
+
+```sh
+PYTHONPATH=src python3 -m complied.access create-user --user owner-demo --role owner
+PYTHONPATH=src python3 -m complied.web
+```
+
+Set a unique password at the hidden prompt. Open http://127.0.0.1:8080, sign in and use **Edit and review requirements**. Create/edit saves as unresolved; review requires a source and rationale. Every save records an actor and revision. Editing invalidates prior schedules.
+
+To provision a delegate, use create-user with --role delegate. To revoke an account:
+
+```sh
+PYTHONPATH=src python3 -m complied.access disable-user --user delegate-demo
+```
+
+[Authentication details](docs/AUTHENTICATED-EDITING.md). These are synthetic local accounts; production Entra integration remains pending.

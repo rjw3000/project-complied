@@ -89,3 +89,7 @@ ADR 001 selects Python standard library/SQLite for synthetic M1 only. Use README
 ## Recurrence increment — 5 October 2026
 
 Previous prototype checks passed at 0d0d1d3. This increment adds schema v2, immutable schedule definitions, monthly/quarterly/annual generation and atomic conflict handling. Follow README to generate demo periods and docs/RECURRENCE.md for policy semantics. No real deadlines are populated. Next: authenticated editing and review/reconciliation UI, then durable reminder outbox. Full obligation versioning, background scheduling and notification delivery remain pending. Validate the latest PR head before merge.
+
+## Authenticated editing increment
+
+PRs #7/#8/#9 merged after passing checks; main milestone b5f1055. This increment adds local scrypt accounts, expiring/revocable sessions, CSRF-protected edit/review forms, revision-bound schedules and append-only change audit. Existing approved dates become unresolved after review changes. No payment endpoint exists; delegate payment-initiation authorization is denied. Next implementation: durable Microsoft reminder outbox and adapter tests. Production Entra identity, calendar/mail consent and actual delivery require account configuration. Follow README and docs/AUTHENTICATED-EDITING.md.

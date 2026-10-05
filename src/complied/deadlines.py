@@ -31,6 +31,8 @@ def connect(path):
         db.execute("INSERT OR IGNORE INTO schema_versions VALUES(1)")
     from complied.recurrence import migrate
     migrate(db)
+    from complied.access import migrate as migrate_access
+    migrate_access(db)
     return db
 
 def add_obligation(db, *, id, title, jurisdiction, owner, status="unresolved",
@@ -40,7 +42,7 @@ def add_obligation(db, *, id, title, jurisdiction, owner, status="unresolved",
     if not all(str(v).strip() for v in (id, title, jurisdiction, owner)):
         raise ValueError("Scope and owner are required")
     with db:
-        db.execute("INSERT INTO obligations VALUES(?,?,?,?,?,?,?,?,?)",
+        db.execute("INSERT INTO obligations(id,title,jurisdiction,status,source,rationale,owner,location_id,reviewed) VALUES(?,?,?,?,?,?,?,?,?)",
                    (id,title,jurisdiction,status,source,rationale,owner,location_id,int(reviewed)))
 
 def add_task(db, obligation_id, period, due_date=None):
@@ -54,18 +56,18 @@ def add_task(db, obligation_id, period, due_date=None):
     if due_date and (obligation["status"] != "applicable" or not obligation["reviewed"]):
         raise ValueError("Unreviewed obligations cannot have verified deadlines")
     with db:
-        db.execute("INSERT OR IGNORE INTO tasks(obligation_id,period,due_date) VALUES(?,?,?)",
-                   (obligation_id,period,due_date))
-        saved = db.execute("SELECT due_date FROM tasks WHERE obligation_id=? AND period=?",
+        db.execute("INSERT OR IGNORE INTO tasks(obligation_id,period,due_date,obligation_revision) VALUES(?,?,?,?)",
+                   (obligation_id,period,due_date,obligation["revision"]))
+        saved = db.execute("SELECT due_date,obligation_revision FROM tasks WHERE obligation_id=? AND period=?",
                            (obligation_id,period)).fetchone()
-        if saved["due_date"] != due_date:
+        if saved["due_date"] != due_date or saved["obligation_revision"] != obligation["revision"]:
             raise ValueError("Existing deadline differs; explicit reconciliation required")
 
 def complete_task(db, task_id, completed_on):
     date.fromisoformat(completed_on)
-    row = db.execute("""SELECT o.status,t.due_date FROM tasks t
+    row = db.execute("""SELECT o.status,o.reviewed,o.revision,t.obligation_revision,t.due_date FROM tasks t
                       JOIN obligations o ON o.id=t.obligation_id WHERE t.id=?""", (task_id,)).fetchone()
-    if row is None or row["status"] != "applicable" or row["due_date"] is None:
+    if row is None or row["status"] != "applicable" or not row["reviewed"] or row["due_date"] is None or row["revision"] != row["obligation_revision"]:
         raise ValueError("Unresolved tasks cannot be completed")
     with db:
         db.execute("UPDATE tasks SET completed_on=? WHERE id=?", (completed_on,task_id))
@@ -74,7 +76,7 @@ def dashboard(db, today):
     """Unknown applicability takes precedence over nominal task dates."""
     rows = db.execute("""SELECT t.id,o.id AS obligation_id,COALESCE(t.period,'No period') AS period,
                          t.due_date,t.completed_on,o.title,o.jurisdiction,o.owner,o.status AS applicability,
-                         o.source,o.rationale,o.reviewed,tr.rule_id FROM obligations o
+                         o.source,o.rationale,o.reviewed,tr.rule_id,o.revision,t.obligation_revision FROM obligations o
                          LEFT JOIN tasks t ON o.id=t.obligation_id
                          LEFT JOIN task_rules tr ON tr.task_id=t.id
                          ORDER BY t.due_date IS NULL,t.due_date,t.id""").fetchall()
@@ -83,7 +85,7 @@ def dashboard(db, today):
         item = dict(row)
         if item["applicability"] == "not_applicable":
             state = "not_applicable"
-        elif item["applicability"] != "applicable" or not item["reviewed"] or not item["due_date"]:
+        elif item["applicability"] != "applicable" or not item["reviewed"] or not item["due_date"] or item["obligation_revision"] != item["revision"]:
             state = "unresolved"
         elif item["completed_on"]:
             state = "completed"
