@@ -171,11 +171,11 @@ def handler_for(db_path):
                 return cookies["complied_session"].value if "complied_session" in cookies else ""
             except Exception:
                 return ""
-        def respond(self,status,content,cookie=None,content_type="text/html; charset=utf-8",filename=None):
+        def respond(self,status,content,cookie=None,content_type="text/html; charset=utf-8",download=False):
             payload=content.encode()
             self.send_response(status)
             self.send_header("Content-Type",content_type)
-            if filename: self.send_header("Content-Disposition",'attachment; filename="'+filename+'"')
+            if download: self.send_header("Content-Disposition",'attachment; filename="complied-source-review.json"')
             self.send_header("Content-Length",str(len(payload)))
             self.send_header("Cache-Control","no-store")
             self.send_header("X-Content-Type-Options","nosniff")
@@ -209,7 +209,7 @@ def handler_for(db_path):
                     from complied.package_review import export_package
                     package_id=package_query(self.path)
                     self.respond(200,export_package(db,self.token(),package_id),content_type="application/json; charset=utf-8",
-                                 filename="complied-source-"+package_id+".json")
+                                 download=True)
                     return
                 elif path=="/package":
                     content=package_page(db,user,package_query(self.path))
@@ -268,7 +268,7 @@ def handler_for(db_path):
                 elif path=="/package-review":
                     from complied.package_review import record_review
                     record_review(db,token,fields["package_id"],int(fields["revision"]),fields["decision"],fields["notes"],fields["context"])
-                    self.redirect("/package?id="+fields["package_id"])
+                    self.redirect("/preparation")
                 elif path=="/schedule-preview":
                     from complied.schedules import propose
                     definition={key:fields[key] for key in ("anchor","effective_start","effective_end","short_month","roll")}

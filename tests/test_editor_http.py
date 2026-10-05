@@ -116,3 +116,8 @@ class EditorHTTPTests(unittest.TestCase):
         self.assertNotIn("<script>test</script>",page)
         self.assertIn("&lt;script&gt;",page)
         self.assertEqual(self.request("GET","/package?id=missing",cookie=cookie)[0],404)
+
+        self.assertEqual(headers["Content-Disposition"],'attachment; filename="complied-source-review.json"')
+        status,headers,_=self.request("GET","/package-export?id="+package_id+"%0D%0AX-Injected%3Ayes",cookie=cookie)
+        self.assertEqual(status,404)
+        self.assertNotIn("X-Injected",headers)
