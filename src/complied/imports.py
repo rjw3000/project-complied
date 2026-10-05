@@ -69,8 +69,7 @@ def import_snapshot(db,token,raw):
             audit(db,user,"import-sales",key,{"store":row["store_id"],"period":row["period"],"format":FORMAT})
     return key
 
-def prepare(db,token,snapshot_ids):
-    user=authorize(db,token,"review")
+def assemble(db,snapshot_ids):
     if len(snapshot_ids)!=2 or len(set(snapshot_ids))!=2:
         raise ValueError("Select two distinct source snapshots")
     snapshots=[]
@@ -94,6 +93,11 @@ def prepare(db,token,snapshot_ids):
                   sources=[dict(snapshot_id=key,**row) for key,row in snapshots],totals=totals,
                   limitations=["Synthetic normalized contract; actual PostalMate mapping unverified",
                                "No rates, exemptions, return lines or remittance amount calculated"])
+    return manifest
+
+def prepare(db,token,snapshot_ids):
+    user=authorize(db,token,"review")
+    manifest=assemble(db,snapshot_ids)
     serialized=json.dumps(manifest,sort_keys=True,separators=(",",":"))
     key=hashlib.sha256(serialized.encode()).hexdigest()
     with db:

@@ -85,3 +85,34 @@ class EditorHTTPTests(unittest.TestCase):
         self.assertEqual(db.execute("SELECT COUNT(*) FROM tasks").fetchone()[0],0)
         db.close()
         self.assertEqual(self.request("POST","/schedule-confirm",dict(csrf=csrf,proposal_id=proposal),cookie)[0],303)
+
+    def test_package_review_and_download_require_auth(self):
+        import json
+        from complied.imports import import_snapshot,prepare
+        from complied.package_review import summary,context
+        from complied.access import login
+        from test_imports import raw
+        db=connect(self.path)
+        token,_=login(db,"demo",self.password)
+        ids=[import_snapshot(db,token,raw()),import_snapshot(db,token,raw("pantops"))]
+        package_id,_=prepare(db,token,ids)
+        data=summary(db,package_id)
+        fingerprint,_=context(db,data["manifest"])
+        db.close()
+        self.assertEqual(self.request("GET","/package-export?id="+package_id)[0],303)
+        _,headers,_=self.request("POST","/login",{"user":"demo","password":self.password})
+        cookie=headers["Set-Cookie"].split(";")[0]
+        db=connect(self.path)
+        csrf=authenticate(db,cookie.split("=",1)[1])["csrf"]
+        db.close()
+        self.assertIn("Monthly package review",self.request("GET","/package?id="+package_id,cookie=cookie)[2])
+        fields=dict(csrf=csrf,package_id=package_id,revision="0",context=fingerprint,decision="sources_reviewed",notes="<script>test</script>")
+        self.assertEqual(self.request("POST","/package-review",fields,cookie)[0],303)
+        status,headers,body=self.request("GET","/package-export?id="+package_id,cookie=cookie)
+        self.assertEqual(status,200)
+        self.assertIn("attachment",headers["Content-Disposition"])
+        self.assertFalse(json.loads(body)["return_ready"])
+        page=self.request("GET","/package?id="+package_id,cookie=cookie)[2]
+        self.assertNotIn("<script>test</script>",page)
+        self.assertIn("&lt;script&gt;",page)
+        self.assertEqual(self.request("GET","/package?id=missing",cookie=cookie)[0],404)

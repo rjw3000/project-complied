@@ -1,6 +1,6 @@
 # Project Complied — Continuation Handoff
 
-Version: 0.5 | Updated: 5 October 2026 | Owner: RJ Williams
+Version: 0.6 | Updated: 5 October 2026 | Owner: RJ Williams
 
 ## Read first
 
@@ -44,3 +44,7 @@ python3 -m unittest discover -s tests -v
 Use branches/PRs and validate the exact head with required checks. User has authorized PR creation and merge when green in this session; address review findings first. No bot auto-approval or auto-merge. No live secrets or business records in Git/CI. Maintain Project.md and this handoff with each milestone.
 
 Reminder compatibility fix: enqueue recognizes pre-v5 semantic identities and preserves original IDs; existing duplicate identities block dispatch for reconciliation, including unknown outcomes. Never regenerate a key to bypass uncertain prior delivery.
+
+## Source-package review increment
+
+PR #13 merged green at 7cf91b1. This increment adds schema v7, authenticated source decisions, append-only review history and JSON exports. Review context includes all known monthly source versions; corrections invalidate earlier review until explicit revalidation. Tax-return blockers stay visible and return_ready is always false. Follow docs/PACKAGE-REVIEW.md. Next: verified actual report mapping and return rules after sample inputs; runtime production identity and live Microsoft OAuth still pending.
