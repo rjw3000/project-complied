@@ -81,3 +81,7 @@ For new answers: update Project.md facts and remove/resolve the matching pending
 - 5 October 2026 — v0.3: follow-up answers recorded; replaced answered questions with concrete validation inputs. Prioritize deadline prototype and PostalMate imports. QBO-first assumptions are superseded.
 
 - 5 October 2026 — v0.4: jurisdiction and handling clarifications captured; implementation-ready specifications and milestone plan published. The Mermaid architecture is current; the old PNG is historical.
+
+## Local deadline prototype added
+
+ADR 001 selects Python standard library/SQLite for synthetic M1 only. Use README seed/run commands. Added persistent obligation/task schema, loopback read-only dashboard, review gates, duplicate task prevention, and behavior tests. Still pending: authenticated editing, versioned obligation changes, recurrence generation, notifications, imports and production selection. Existing approval module remains a reference. CI must validate this implementation; offline workspace prevented local execution. Do not call M1 complete yet.
