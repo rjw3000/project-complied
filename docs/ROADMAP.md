@@ -34,3 +34,5 @@ November target is deadline tracking and assisted preparation; complete automati
 Local register/dashboard and initial tests are implemented in PR #8 (checks passed at 0d0d1d3). Recurrence increment adds rule provenance, migration and calendar-boundary tests. M1 remains partial pending authenticated editing and broader obligation versioning. M2 outbox can follow after rule review and reconciliation paths are in place.
 
 Local dashboard/recurrence merged at b5f1055. Authenticated local editing adds actor audit, optimistic revisions and stale schedule invalidation. M1 still needs explicit reviewed schedule reconciliation; production identity and full obligation versioning remain future gates. M2 reminder outbox is next.
+
+Authenticated editing/review merged green at 48a5a711. M2 increment implements durable outbox, owner destinations, calendar/email payloads and synthetic failure tests. Live OAuth transport, scheduler deployment and event reconciliation remain M2 acceptance gates.

@@ -46,6 +46,37 @@ def register_page(db,user):
     content+='<form method="post" action="/logout">'+csrf+'<button>Sign out</button></form>'
     return page("Requirement editing and review",content)
 
+
+def reminders_page(db,user):
+    from complied.reminders import list_outbox,valid,task
+    csrf=hidden("csrf",user["csrf"])
+    content='<p><a href="/">Dashboard</a> · <a href="/register">Requirement review</a></p>'
+    content+='<p>Microsoft connection pending. Queue and preview only; nothing is sent.</p>'
+    settings=db.execute("SELECT * FROM reminder_settings WHERE singleton=1").fetchone()
+    if user["role"]=="owner":
+        content+='<form method="post" action="/configure-reminders"><h2>Destinations</h2>'+csrf
+        content+=field("recipient","Reminder email",settings["recipient"] if settings else "",kind="email")
+        content+=field("calendar_id","Dedicated calendar ID",settings["calendar_id"] if settings else "")
+        content+='<button>Save destinations</button></form>'
+    if settings:
+        content+='<form method="post" action="/queue-reminder"><h2>Queue a reminder</h2>'+csrf
+        content+='<label>Verified task<select name="task_id">'
+        for row in db.execute("SELECT id FROM tasks ORDER BY id"):
+            record=task(db,row["id"])
+            if valid(record):
+                content+='<option value="'+str(row["id"])+'">'+escape(record["title"]+' · '+record["period"])+'</option>'
+        content+='</select></label><label>Channel<select name="channel"><option value="email">Email</option><option value="calendar">Calendar event</option></select></label>'
+        content+=field("offset_days","Days before deadline (email)",7,kind="number")
+        content+='<button>Queue for preview</button></form>'
+    content+='<h2>Reminder history</h2>'
+    for row in list_outbox(db):
+        content+='<form><strong>'+escape(row["channel"]+' · '+row["status"])+'</strong>'
+        content+='<p>Task '+str(row["task_id"])+' · attempts '+str(row["attempts"])+'</p>'
+        if row["needs_reconciliation"]:
+            content+='<p>Task or destination changed: reconciliation needed.</p>'
+        content+='<pre style="white-space:pre-wrap">'+escape(row["payload"])+'</pre></form>'
+    return page("Microsoft reminders",content)
+
 def handler_for(db_path):
     class Handler(BaseHTTPRequestHandler):
         def origin(self):
@@ -86,18 +117,20 @@ def handler_for(db_path):
                 form='<form method="post" action="/login">'+field("user","User")+field("password","Password",kind="password")+'<button>Sign in</button></form>'
                 self.respond(200,page("Project Complied sign-in",form))
                 return
-            if path not in ("/","/register"):
+            if path not in ("/","/register","/reminders"):
                 self.send_error(404)
                 return
             db=connect(db_path)
             try:
                 user=authenticate(db,self.token())
-                if path=="/register":
+                if path=="/reminders":
+                    content=reminders_page(db,user)
+                elif path=="/register":
                     content=register_page(db,user)
                 else:
                     from complied.web import render
                     today=datetime.now(ZoneInfo("America/New_York")).date()
-                    content=render(dashboard(db,today),today).replace("<header>","<header><p><a href='/register'>Edit and review requirements</a></p>",1)
+                    content=render(dashboard(db,today),today).replace("<header>","<header><p><a href='/register'>Edit and review requirements</a> · <a href='/reminders'>Microsoft reminders</a></p>",1)
                 self.respond(200,content)
             except PermissionError:
                 self.redirect("/login")
@@ -108,7 +141,7 @@ def handler_for(db_path):
                 self.send_error(403)
                 return
             path=urlsplit(self.path).path
-            if path not in ("/login","/logout","/create","/edit","/review"):
+            if path not in ("/login","/logout","/create","/edit","/review","/configure-reminders","/queue-reminder"):
                 self.send_error(404)
                 return
             try:
@@ -136,6 +169,14 @@ def handler_for(db_path):
                 if path=="/logout":
                     logout(db,token)
                     self.redirect("/login","complied_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0")
+                elif path=="/configure-reminders":
+                    from complied.reminders import configure
+                    configure(db,token,fields["recipient"],fields["calendar_id"])
+                    self.redirect("/reminders")
+                elif path=="/queue-reminder":
+                    from complied.reminders import enqueue
+                    enqueue(db,token,int(fields["task_id"]),fields["channel"],int(fields["offset_days"]))
+                    self.redirect("/reminders")
                 else:
                     mutate(db,token,path[1:],fields)
                     self.redirect("/register")
