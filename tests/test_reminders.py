@@ -104,3 +104,8 @@ class ReminderTests(unittest.TestCase):
         self.assertEqual(adapter.send("email",{"path":"/me/sendMail","body":{}}),("failed",None))
         adapter=MicrosoftGraphAdapter(lambda path,body:(503,{}))
         self.assertEqual(adapter.send("email",{"path":"/me/sendMail","body":{}}),("unknown",None))
+
+    def test_recipient_validation_is_bounded(self):
+        for value in ["!"*10000,"missing-at","@example.invalid","demo@.invalid","demo@example.","demo @example.invalid"]:
+            with self.assertRaises(ValueError):
+                configure(self.db,self.token,value,"calendar")

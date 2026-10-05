@@ -1,7 +1,6 @@
 """Durable Microsoft reminder outbox. Default execution is preview only."""
 import hashlib
 import json
-import re
 import time
 from datetime import date,datetime,timedelta,timezone
 from urllib.parse import quote
@@ -32,7 +31,10 @@ def configure(db,token,recipient,calendar_id):
     user=authorize(db,token,"reminders")
     if user["role"]!="owner":
         raise PermissionError("Owner configures destinations")
-    if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+",recipient) or len(recipient)>254:
+    if len(recipient)>254 or recipient.count("@")!=1 or any(c.isspace() for c in recipient):
+        raise ValueError("Valid email required")
+    local,domain=recipient.split("@")
+    if not local or "." not in domain or domain.startswith(".") or domain.endswith("."):
         raise ValueError("Valid email required")
     if not calendar_id.strip() or len(calendar_id)>1000:
         raise ValueError("Calendar ID required")
