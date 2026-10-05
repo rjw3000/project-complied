@@ -34,6 +34,9 @@ def main():
             except Exception:
                 # Graph/identity errors must not put credentials in logs or claim queued sends.
                 status="connection_unavailable"
+            with db:
+                db.execute("INSERT OR REPLACE INTO microsoft_runtime_status VALUES(1,?,?)",
+                           (status or "no_due_request",int(time.time())))
             print("Reminder worker: "+(status or "no_due_request"),flush=True)
             if args.once:
                 return

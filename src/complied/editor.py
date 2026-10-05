@@ -91,6 +91,12 @@ def reminders_page(db,user):
                 content+='<form method="post" action="/connect-microsoft">'+csrf+'<button>Connect Microsoft reminders</button></form>'
     else:
         content+='<p>Microsoft connection pending. Queue and preview only; nothing is sent.</p>'
+    if live:
+        runtime=db.execute("SELECT status,updated FROM microsoft_runtime_status WHERE singleton=1").fetchone()
+        worker_status=("Last worker check: "+runtime["status"] if runtime else "Worker has not checked yet")
+        if os.environ.get("COMPLIED_LIVE_SEND")!="1":
+            worker_status="Live worker disabled until controlled setup is complete"
+        content+='<p class="notice">'+escape(worker_status)+'</p>'
     settings=db.execute("SELECT * FROM reminder_settings WHERE singleton=1").fetchone()
     if user["role"]=="owner" and (not live or linked):
         content+='<form method="post" action="/configure-reminders"><h2>Destinations</h2>'+csrf

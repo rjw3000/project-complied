@@ -48,6 +48,8 @@ def migrate(db):
       CREATE TABLE IF NOT EXISTS microsoft_connections(
         user_id TEXT PRIMARY KEY REFERENCES users(id),encrypted_cache BLOB NOT NULL,
         connected_at INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS microsoft_runtime_status(
+        singleton INTEGER PRIMARY KEY CHECK(singleton=1),status TEXT NOT NULL,updated INTEGER NOT NULL);
     """)
     with db: db.execute("INSERT OR IGNORE INTO schema_versions VALUES(8)")
 
@@ -121,12 +123,17 @@ def finish(db,browser,params,session=""):
         return start_session(db,user_id),"login"
     if role!="owner" or authenticate(db,session)["id"]!=user_id:
         raise PermissionError("Microsoft account does not match signed-in owner")
-    with db:
+    db.execute("BEGIN IMMEDIATE")
+    try:
         if authenticate(db,session)["id"]!=user_id:
             raise PermissionError("Owner session changed")
         db.execute("INSERT OR REPLACE INTO microsoft_connections VALUES(?,?,?)",
                    (user_id,Fernet(config["COMPLIED_TOKEN_KEY"].encode()).encrypt(cache.serialize().encode()),
                     int(time.time())))
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return None,"connect"
 
 def connected(db,user_id):
