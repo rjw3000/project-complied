@@ -48,3 +48,7 @@ Private evidence and secrets never enter public Git or CI. Separate worker permi
 ## Delivery boundaries
 
 Calendar and synthetic imports can proceed now. Live M365/Dropbox/QBO access, verified tax calculations and portal operations require their own input/authorization gates. Portal API existence is unverified; manual filing is first. Google, automatic submission/payment and commercial tenancy are later work. See [roadmap](../ROADMAP.md) and [handoff](../../Handoff.md).
+
+## Presentation surfaces
+
+Vercel hosts `public/index.html` and local UI assets as a synthetic management preview. The authenticated Python server embeds the same `public/styles.css` inside its existing CSP and Docker image. The preview is not a second persistence layer or API; operations remain on the configured Python host. See [UI design](../UI-DESIGN.md) and [Vercel scope](../VERCEL-PREVIEW.md).

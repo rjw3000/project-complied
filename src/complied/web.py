@@ -12,7 +12,7 @@ from complied.deadlines import connect, dashboard
 def render(rows, today, monthly=None):
     from complied.editor import page
     counts=Counter(row["state"] for row in rows)
-    cards="".join('<div class="card"><strong>'+str(counts[state])+'</strong><span>'+label+'</span></div>'
+    cards="".join('<div class="metric"><div class="metric-top">'+label+'</div><div class="metric-value">'+str(counts[state])+'</div></div>'
         for state,label in [("overdue","Overdue"),("due_today","Due today"),
                             ("upcoming","Upcoming"),("unresolved","Needs verification"),
                             ("completed","Completed"),("not_applicable","Not applicable")])
@@ -44,11 +44,12 @@ def render(rows, today, monthly=None):
         priority+='<li><a href="/register">Verify '+str(counts["unresolved"])+' unresolved requirement(s)</a></li>'
     if priority:
         summary+='<section class="panel"><h2>Other actions</h2><ul>'+priority+'</ul></section>'
+    scope_panel=('<section class="panel"><h2>Operating scope</h2><dl class="detail-list"><div><dt>Source reports</dt><dd>Ivy Road and Pantops</dd></div><div><dt>Review unit</dt><dd>One legal entity</dd></div><div><dt>Sales preparation</dt><dd>PostalMate exports</dd></div><div><dt>Filing and payment</dt><dd>Separate approvals</dd></div></dl><p><a class="text-link" href="/reminders">Review Microsoft reminders →</a></p></section>')
     content=('<p class="muted">See what is due and which requirements need review. Business date: '
              +escape(str(today))+' · America/New_York</p>'
              '<div class="notice">Synthetic demo only. Dates are illustrative. Verify each statutory rule before relying on it.</div>'
-             '<section class="cards" aria-label="Task counts">'+cards+'</section>'
-             +summary+
+             '<section class="cards task-cards" aria-label="Task counts">'+cards+'</section>'
+             +'<div class="grid-2"><div>'+summary+'</div><aside>'+scope_panel+'</aside></div>'+
              '<div class="table" id="obligations"><table><caption>Obligation register and period tasks</caption>'
              '<thead><tr><th>Requirement</th><th>Jurisdiction</th><th>Period</th><th>Deadline</th>'
              '<th>Status</th><th>Owner</th><th>Source</th><th>Review context</th></tr></thead><tbody>'

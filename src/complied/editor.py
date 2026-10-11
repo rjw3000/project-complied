@@ -12,39 +12,32 @@ from complied.access import authenticate,login,logout,mutate
 from complied.deadlines import connect,dashboard
 
 def page(title,content,public=False):
-    nav=('<nav aria-label="Main navigation"><a href="/">Overview</a>'
-         '<a href="/register">Requirements</a><a href="/schedules">Schedules</a>'
-         '<a href="/preparation">Sales preparation</a><a href="/reminders">Reminders</a></nav>')
-    header=('<header class="topbar"><a class="brand" href="/">◆ <span>PROJECT COMPLIED</span></a>'
-            +('' if public else nav)+
-            '<span class="environment">Internal prototype</span></header>')
+    from pathlib import Path
+    styles=(Path(__file__).resolve().parents[2]/"public"/"styles.css").read_text()
+    active=("/register" if "requirement" in title.lower() else
+            "/schedules" if "schedule" in title.lower() else
+            "/reminders" if any(word in title.lower() for word in ("microsoft","calendar selection")) else
+            "/preparation" if any(word in title.lower() for word in ("sales","source package")) else "/")
+    links=(("/","Overview"),("/preparation","Monthly workspace"),("/register","Requirements"),
+           ("/schedules","Schedules"),("/reminders","Microsoft reminders"))
+    nav='<nav class="side-nav" aria-label="Main navigation">'+''.join(
+        '<a href="'+href+'"'+(' aria-current="page"' if href==active else '')+'>'+label+'</a>'
+        for href,label in links)+'</nav>'
+    brand='<a class="brand" href="/"><span class="brand-mark">c</span><span>complied<small>BUSINESS OPERATIONS</small></span></a>'
+    sidebar=('' if public else '<aside class="sidebar runtime-sidebar">'+brand+
+             '<div class="workspace-label">Management workspace</div>'+nav+
+             '<div class="sidebar-bottom"><strong>Owner-reviewed workflow</strong>Preparation, review and reminders.</div></aside>')
+    header=('<header class="app-header">'+(brand if public else
+             '<div class="entity-label">Project Complied<small>INTERNAL MANAGEMENT WORKSPACE</small></div>')+
+             '<div class="header-actions"><span class="badge">Internal prototype</span></div></header>')
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            '<title>'+escape(title)+' · Project Complied</title>'
-            '<style>'
-            ':root{color-scheme:light;--ink:#172b41;--muted:#50657b;--line:#dbe5ed;--bg:#f3f7f9;--blue:#174c7e}'
-            '*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,sans-serif}'
-            'a{color:var(--blue);text-underline-offset:3px}.topbar{display:flex;align-items:center;gap:24px;padding:16px max(24px,calc((100vw - 1180px)/2));background:#102b43;color:#fff;flex-wrap:wrap}'
-            '.brand{font-weight:800;letter-spacing:.07em;text-decoration:none;color:white;white-space:nowrap}.brand:first-letter{color:#77d6bc}'
-            'nav{display:flex;gap:18px;flex-wrap:wrap}nav a{color:#e4eef6;text-decoration:none;font-size:14px}nav a:hover,nav a:focus-visible{text-decoration:underline}'
-            '.environment{margin-left:auto;border:1px solid #6591a1;border-radius:99px;padding:3px 11px;color:#c5dfec;font-size:12px}'
-            'main{max-width:1180px;margin:auto;padding:36px 24px 72px}h1{font-size:clamp(28px,4vw,40px);letter-spacing:-.035em;line-height:1.16;margin:0 0 12px}'
-            'h2{font-size:22px;margin:0 0 10px}h3{margin:0 0 10px}p{margin:10px 0 16px}small,.muted{color:var(--muted)}'
-            'form,.panel,.card,.table{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 20px rgba(17,47,71,.04)}'
-            'form,.panel{padding:22px;margin:20px 0}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:24px 0}'
-            '.card{padding:19px}.card strong{display:block;font-size:30px;line-height:1.2}.card span{color:var(--muted);font-size:14px}'
-            '.notice{padding:16px 20px;border:1px solid #e6c987;background:#fff6df;border-radius:12px}.table{overflow:auto}'
-            'table{border-collapse:collapse;width:100%;text-align:left}th,td{padding:13px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#eaf0f5;font-size:13px;white-space:nowrap}tr:last-child td{border-bottom:0}'
-            'label{display:block;margin:12px 0;color:#344c63;font-weight:600}input,select,textarea{display:block;width:min(100%,680px);font:inherit;padding:10px 12px;border:1px solid #aabccc;border-radius:7px;background:white;color:var(--ink)}'
-            'input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid #54a9db;outline-offset:2px}'
-            'input[type=hidden]{display:none}input[type=checkbox]{display:inline;width:auto;margin-right:9px}textarea{min-height:95px}button{font:inherit;font-weight:650;background:var(--blue);color:white;padding:10px 17px;border:0;border-radius:7px;cursor:pointer}'
-            'button:hover{background:#0e395f}.button-link{display:inline-block;background:#174c7e;color:white;text-decoration:none;padding:10px 17px;border-radius:7px;font-weight:650}'
-            '.steps{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0;margin:24px 0}.steps li{padding:12px;background:#e6edf2;border-radius:10px;color:#385269;font-weight:650}.steps .current{background:#174c7e;color:white}'
-            '.action-card{background:#e7f5f1;border:1px solid #9dd0bf;border-radius:14px;padding:23px;margin:22px 0}.badge{font-size:12px;font-weight:700;display:inline-block;padding:3px 9px;border-radius:99px;background:#e6eef4;color:#174c7e;vertical-align:middle}'
-            '.checks{list-style:none;padding:0}.checks li{border-bottom:1px solid var(--line);padding:12px 0}.checks li:last-child{border:0}.checks p{color:var(--muted);margin:4px 0}'
-            'pre{overflow:auto;padding:14px;background:#f0f4f8;border-radius:8px}details{margin:16px 0}'
-            '@media(max-width:640px){.topbar{gap:12px;padding:16px 20px}.environment{margin-left:0}main{padding:28px 18px 54px}form,.panel{padding:17px}th,td{padding:10px;font-size:14px}}'
-            '</style></head><body>'+header+'<main><h1>'+escape(title)+'</h1>'+content+'</main></body></html>')
+            '<title>'+escape(title)+' · Project Complied</title><style>'+styles+
+            '@media(max-width:760px){.runtime-sidebar{position:static;width:auto;transform:none;padding:18px}.runtime-sidebar .workspace-label,.runtime-sidebar .sidebar-bottom{display:none}.runtime-sidebar .brand{padding:0;margin-bottom:14px}.runtime-sidebar .side-nav{display:flex;overflow:auto;gap:8px}.runtime-sidebar .side-nav a{white-space:nowrap;font-size:12px;padding:8px 10px}.runtime-sidebar+.shell{margin:0}}'
+            '</style></head><body'+(' class="login-layout"' if public else '')+'>'
+            '<a class="skip-link" href="#main-content">Skip to content</a>'+sidebar+'<div class="shell">'+header+
+            '<main id="main-content"><div class="page-head"><div><div class="eyebrow">Management workspace</div><h1>'+escape(title)+
+            '</h1></div></div>'+content+'</main></div></body></html>')
 
 
 def field(name,label,value="",kind="text"):

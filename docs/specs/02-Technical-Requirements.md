@@ -66,3 +66,7 @@ Add behavior tests for store/period completeness, duplicate imports, signed refu
 ## Prototype recurrence implementation
 
 See [recurrence contract](../RECURRENCE.md). The local implementation supports period lengths of 1/3/12 months with explicit anchor, effective range, short-month policy and reviewed holiday calendar coverage. It retains one task per obligation/period with immutable rule provenance and rejects competing rule versions until explicit reconciliation exists. Full obligation versioning remains a future requirement; no statutory rule is preloaded.
+
+## UI verification contract
+
+The shared design system covers responsive navigation, readable scoped monetary totals, explicit source/filing/payment states, empty/setup states, visible keyboard focus and native detail dialogs. Browser checks verify filtering, scope totals, fixture exports, escaped unsaved notes and mobile page overflow. No preview interaction writes operational state or calls connectors. See [UI design](../UI-DESIGN.md).
