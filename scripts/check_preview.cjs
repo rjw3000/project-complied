@@ -19,6 +19,7 @@ const {chromium}=require('playwright');
     await page.goto('http://127.0.0.1:8097/');
     await page.locator('h1').waitFor();
     assert.equal(await page.locator('h1').textContent(),'Business overview');
+    assert.equal(await page.locator('#menu-button').isVisible(),false,'Mobile menu must be hidden on desktop');
     const output=process.env.COMPLIED_UI_OUTPUT;if(output){fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,'dashboard-desktop.png'),fullPage:true});}
     await page.locator('[data-scope]').selectOption('ivy');
     assert.match(await page.locator('.sales-total').textContent(),/5,000/);
@@ -36,7 +37,9 @@ const {chromium}=require('playwright');
     await page.locator('#requirement-type').selectOption('Tax filing');
     assert.equal(await page.locator('#requirement-results tbody tr').count(),1);
     await page.locator('.side-nav a[href="#upload"]').click();
+    await page.getByRole('heading',{name:'Monthly sales workspace',exact:true}).waitFor();
     await page.locator('a[href="#reconcile"]').first().click();
+    await page.getByRole('heading',{name:'Reconcile monthly sales',exact:true}).waitFor();
     await page.locator('[data-scope]').selectOption('pantops');
     assert.match(await page.locator('.total-row').textContent(),/8,000/);
     await page.locator('[data-scope]').selectOption('both');
@@ -48,6 +51,7 @@ const {chromium}=require('playwright');
     assert.equal(createHash('sha256').update(bytes).digest('hex'),createHash('sha256').update(fixture).digest('hex'));
     await page.keyboard.press('Escape');
     await page.locator('a[href="#review"]').first().click();
+    await page.getByRole('heading',{name:'Review monthly source package',exact:true}).waitFor();
     await page.locator('#review-notes').fill('<script>alert("injection")</script>');
     await page.locator('#preview-decision').click();
     assert.match(await page.locator('dialog').textContent(),/Not saved/);
@@ -55,20 +59,26 @@ const {chromium}=require('playwright');
     assert.match(await page.locator('dialog').textContent(),/<script>/);
     await page.keyboard.press('Escape');
     await page.locator('.side-nav a[href="#calendar"]').click();
+    await page.getByRole('heading',{name:'Compliance calendar',exact:true}).waitFor();
+    await page.locator('.skip-link').focus();await page.locator('.skip-link').press('Enter');
+    assert.equal(new URL(page.url()).hash,'#calendar','Skip to content must preserve the current workspace');
     assert.equal(await page.locator('.calendar-day:not(.blank)').count(),31);
     assert.equal(await page.locator('.calendar-day.blank').count(),4);
-    for(const route of ['queue','evidence','integrations','settings']) {await page.locator('.side-nav a[href="#'+route+'"]').click();await page.locator('h1').waitFor();assert.equal(await page.locator('h1').count(),1);}
+    const routeTitles={overview:'Business overview',upload:'Monthly sales workspace',reconcile:'Reconcile monthly sales',review:'Review monthly source package',requirements:'Requirement register',calendar:'Compliance calendar',queue:'Review queue',evidence:'Evidence library',integrations:'Connected services',settings:'Workspace settings'};
+    for(const route of ['queue','evidence','integrations','settings']) {await page.locator('.side-nav a[href="#'+route+'"]').click();await page.getByRole('heading',{name:routeTitles[route],exact:true}).waitFor();assert.equal(await page.locator('h1').count(),1);}
     await page.locator('.side-nav a[href="#evidence"]').click();
+    await page.getByRole('heading',{name:'Evidence library',exact:true}).waitFor();
     const packetDownload=page.waitForEvent('download');await page.locator('[data-download="packet"]').click();
     const packet=JSON.parse(fs.readFileSync(await (await packetDownload).path(),'utf8'));assert.equal(packet.synthetic,true);assert.equal(packet.return_ready,false);assert.equal(packet.sources.length,2);
     await page.setViewportSize({width:390,height:844});
     for(const route of ['overview','upload','reconcile','review','requirements','calendar','queue','evidence','integrations','settings']) {
-      await page.evaluate(r=>location.hash=r,route);await page.waitForTimeout(50);
+      await page.evaluate(r=>location.hash=r,route);await page.getByRole('heading',{name:routeTitles[route],exact:true}).waitFor();
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'Unexpected page overflow on '+route);
     }
     await page.locator('#menu-button').click();assert.equal(await page.locator('#menu-button').getAttribute('aria-expanded'),'true');
     await page.keyboard.press('Escape');assert.equal(await page.locator('#menu-button').getAttribute('aria-expanded'),'false');
     await page.locator('#menu-button').click();await page.locator('.side-nav a[href="#overview"]').click();
+    await page.getByRole('heading',{name:'Business overview',exact:true}).waitFor();
     assert.equal(await page.locator('#menu-button').getAttribute('aria-expanded'),'false');
     if(output){await page.screenshot({path:path.join(output,'dashboard-mobile.png'),fullPage:true});await page.evaluate(()=>location.hash='reconcile');await page.waitForTimeout(100);await page.screenshot({path:path.join(output,'reconcile-mobile.png'),fullPage:true});}
     assert.deepEqual(errors,[],'Browser errors');assert.deepEqual(external,[],'Preview must not make external requests');
