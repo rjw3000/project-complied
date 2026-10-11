@@ -107,4 +107,6 @@ The local synthetic prototype keeps local accounts on loopback. A separate Micro
 
 ## Vercel visual preview
 
-[Open the synthetic owner dashboard preview](https://project-complied.vercel.app/). The Vercel deployment serves a static walk-through of upload → reconcile → review using public sample figures. It does not accept uploads, persist decisions or run Microsoft reminders. See [preview scope](docs/VERCEL-PREVIEW.md) and [hosting requirements for the authenticated application](docs/DEPLOYMENT.md).
+[Open the synthetic owner dashboard preview](https://project-complied.vercel.app/). The Vercel deployment serves an interactive management preview with dashboard, scoped source totals, requirement filters, detail panels, calendar, review queue, evidence library and integration settings. It uses public sample figures. It does not accept uploads, persist decisions or run Microsoft reminders. See [preview scope](docs/VERCEL-PREVIEW.md) and [hosting requirements for the authenticated application](docs/DEPLOYMENT.md).
+
+Shared UI styling and browser verification are documented in [UI design](docs/UI-DESIGN.md).

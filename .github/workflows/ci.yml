@@ -36,3 +36,12 @@ jobs:
           PYTHONPATH=src python -m complied.recurrence --db /tmp/complied-demo.sqlite3
           PYTHONPATH=src python -m complied.deadlines list --db /tmp/complied-demo.sqlite3 --today 2026-10-05
           PYTHONPATH=src python -c "from complied.deadlines import connect,dashboard; from complied.web import render; from datetime import date; db=connect('/tmp/complied-demo.sqlite3'); assert 'Synthetic demo only' in render(dashboard(db,date(2026,10,5)),date(2026,10,5)); db.close()"
+
+      - name: Check preview JavaScript syntax
+        run: node --check public/app.js
+      - name: Install isolated browser verification toolchain
+        run: |
+          npm install --prefix "$RUNNER_TEMP/complied-ui" --no-save playwright@1.58.2
+          "$RUNNER_TEMP/complied-ui/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify synthetic management interface in a browser
+        run: NODE_PATH="$RUNNER_TEMP/complied-ui/node_modules" node scripts/check_preview.cjs

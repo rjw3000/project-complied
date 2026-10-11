@@ -6,6 +6,7 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     groupadd --system complied && useradd --system --gid complied --home /app complied && \
     mkdir -p /data && chown complied:complied /data
 COPY src /app/src
+COPY public/styles.css /app/public/styles.css
 COPY scripts /app/scripts
 USER complied
 EXPOSE 8080

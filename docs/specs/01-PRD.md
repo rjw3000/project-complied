@@ -42,3 +42,7 @@ Owner reports physical goods taxed and tax collected/remitted, third-party shipp
 ## Dependencies and exclusions
 
 Await redacted PostalMate samples, registration notices, actual due dates/form, portal readiness, calendar choice and reviewed tax mappings. Stack/hosting remain open and need an ADR. Autonomous interpretation, portal automation, automatic payments and commercial tenancy are outside the first release. Seven-year retention required; legal triggers and holds need review.
+
+## Management UI delivery
+
+The owner interface uses a consistent workspace shell with overview, next actions, monthly source workflow, requirement review, calendar, review queue, evidence and integration setup. The Vercel surface is a synthetic interactive preview; the Python application retains its authenticated operational forms. See [UI contract](../UI-DESIGN.md).

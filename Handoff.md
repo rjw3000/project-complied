@@ -62,3 +62,9 @@ Owner overview now surfaces overdue/unverified obligations and the next monthly 
 ## Microsoft and hosting handoff (5 October 2026)
 
 Code paths for allowlisted single-tenant Microsoft sign-in, owner-only Graph connection, encrypted token cache, calendar selection and an opt-in scheduled worker are proposed. The worker preflights the owner token and uses the durable one-at-a-time outbox; unknown outcomes remain manual reconciliation. A single-host Compose/Caddy deployment kit and SQLite backup tool are prepared. Outstanding external inputs: owner Entra tenant/client/oid and a configured Web redirect, consent and MFA, DNS/domain, private host and encrypted off-host backup destination; never put credentials in Git or chat. First production-data pilot remains blocked by real PostalMate mapping and restoration test.
+
+## Management UI increment — 10 October 2026
+
+The enterprise management UI is proposed in the next PR: shared workspace shell and visual tokens for Python and Vercel, owner dashboard and priority queue, full monthly workspace, requirement filters/detail panels, calendar, separate review queue, source evidence, integration setup and workspace policy screens. Browser interactions remain explicitly synthetic and local; live uploads, persisted decisions and Microsoft delivery require the authenticated host. The preview does not invent statutory dates, tax rules or filing readiness. See [UI design](docs/UI-DESIGN.md) for checks and continuation boundaries.
+
+Next functional milestone remains a configured authenticated host, restoration rehearsal, real PostalMate mapping and reviewed deadlines. Do not mistake the improved UI or sample exports for a production filing service.

@@ -122,3 +122,9 @@ The owner can begin at the dashboard and follow Upload → Reconcile → Review.
 ## Microsoft and deployment code (5 October 2026)
 
 The next proposed mode is a single-tenant Entra Web sign-in restricted to the owner and explicitly approved delegate object IDs. An owner-only delegated Graph connection can select a dedicated calendar; token cache encryption and an explicit worker gate protect queued reminder dispatch. Docker Compose and Caddy form a single-host, local-disk deployment kit; actual tenant registration, DNS/host, secrets, MFA policy, recipient, calendar and backup restore are operational prerequisites. No live service or notification has been provisioned yet.
+
+## Management UI increment — 10 October 2026
+
+The enterprise management UI is proposed in the next PR: shared workspace shell and visual tokens for Python and Vercel, owner dashboard and priority queue, full monthly workspace, requirement filters/detail panels, calendar, separate review queue, source evidence, integration setup and workspace policy screens. Browser interactions remain explicitly synthetic and local; live uploads, persisted decisions and Microsoft delivery require the authenticated host. The preview does not invent statutory dates, tax rules or filing readiness. See [UI design](docs/UI-DESIGN.md) for checks and continuation boundaries.
+
+Next functional milestone remains a configured authenticated host, restoration rehearsal, real PostalMate mapping and reviewed deadlines. Do not mistake the improved UI or sample exports for a production filing service.
