@@ -17,6 +17,8 @@ The management preview includes overview, monthly upload/reconcile/review, requi
 
 ## Verification
 
+![Management dashboard with synthetic sample data](ui/management-dashboard-20261010.jpg)
+
 Run existing application checks and the browser suite:
 
 ```sh
